@@ -777,9 +777,12 @@
         function normalizeRow(raw) {
             const stock = Math.max(0, Number(raw.stock) || 0);
             const statusValue = String(raw.status || (stock > 0 ? 'In Stock' : 'Out of Stock')).trim() || 'In Stock';
+            const image = String(raw.image || '').trim();
+            const imageThumb = String(raw.imageThumb || '').trim();
             return {
                 id: Number(raw.id) || nextId(),
-                image: String(raw.image || '').trim(),
+                image,
+                imageThumb,
                 name: String(raw.name || '').trim(),
                 type: String(raw.type || 'Normal').trim(),
                 generalTrait: String(raw.generalTrait || '').trim(),
@@ -1064,14 +1067,17 @@
             }
             const toConvert = [];
             rows.forEach(r => {
-                const imageUrl = String(r.image || '').trim();
-                const thumbUrl = String(r.imageThumb || '').trim();
-                if (imageUrl && !imageUrl.startsWith('data:')) {
-                    toConvert.push({ id: r.id, url: imageUrl, field: 'image' });
-                    return;
-                }
-                if (thumbUrl && !thumbUrl.startsWith('data:')) {
-                    toConvert.push({ id: r.id, url: thumbUrl, field: 'imageThumb' });
+                const candidates = [
+                    { field: 'image', url: String(r.image || '').trim() },
+                    { field: 'imageThumb', url: String(r.imageThumb || '').trim() },
+                    { field: 'imageUrl', url: String(r.imageUrl || '').trim() },
+                    { field: 'image_url', url: String(r.image_url || '').trim() },
+                ];
+                for (const candidate of candidates) {
+                    if (!candidate.url) continue;
+                    if (candidate.url.startsWith('data:')) continue;
+                    toConvert.push({ id: r.id, url: candidate.url, field: candidate.field });
+                    break;
                 }
             });
             if (!toConvert.length) {
@@ -1079,6 +1085,7 @@
                 showNotification('No external images found to convert.', 'info');
                 return;
             }
+            showNotification(`Found ${toConvert.length} external image URLs to convert.`, 'info');
             convertButton.disabled = true;
             convertButton.textContent = 'Converting...';
             setStatus(`Converting ${toConvert.length} images...`);
