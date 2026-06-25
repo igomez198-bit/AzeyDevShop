@@ -982,21 +982,54 @@
             });
         }
 
-        // Resize an image from a URL to a data URL (handles remote or relative paths)
-        async function resizeImageFromUrl(url, maxWidth = 800, maxHeight = 800, quality = 0.8) {
+        function isSameOriginUrl(url) {
             try {
-                const resp = await fetch(url, { mode: 'cors' });
-                if (!resp.ok) throw new Error('Fetch failed: ' + resp.status);
-                const blob = await resp.blob();
-                const imgUrl = URL.createObjectURL(blob);
+                const parsed = new URL(url, window.location.href);
+                return parsed.origin === window.location.origin;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        async function loadImageFromUrl(url) {
+            const resolvedUrl = new URL(url, window.location.href).href;
+            return new Promise((resolve, reject) => {
                 const img = new Image();
                 img.crossOrigin = 'Anonymous';
-                const loaded = await new Promise((resolve, reject) => {
-                    img.onload = () => resolve();
-                    img.onerror = (e) => reject(e);
-                    img.src = imgUrl;
-                });
-                URL.revokeObjectURL(imgUrl);
+                img.onload = () => resolve(img);
+                img.onerror = async () => {
+                    if (!resolvedUrl.startsWith('data:')) {
+                        try {
+                            const resp = await fetch(resolvedUrl, { mode: 'cors' });
+                            if (!resp.ok) throw new Error('Fetch failed: ' + resp.status);
+                            const blob = await resp.blob();
+                            const objectUrl = URL.createObjectURL(blob);
+                            const blobImg = new Image();
+                            blobImg.crossOrigin = 'Anonymous';
+                            blobImg.onload = () => {
+                                URL.revokeObjectURL(objectUrl);
+                                resolve(blobImg);
+                            };
+                            blobImg.onerror = (e2) => {
+                                URL.revokeObjectURL(objectUrl);
+                                reject(e2 || new Error('Blob image load failed'));
+                            };
+                            blobImg.src = objectUrl;
+                            return;
+                        } catch (fetchError) {
+                            reject(fetchError);
+                            return;
+                        }
+                    }
+                    reject(new Error('Image load failed')); 
+                };
+                img.src = resolvedUrl;
+            });
+        }
+
+        async function resizeImageFromUrl(url, maxWidth = 800, maxHeight = 800, quality = 0.8) {
+            try {
+                const img = await loadImageFromUrl(url);
                 const w = img.width;
                 const h = img.height;
                 const ratio = Math.min(1, maxWidth / w, maxHeight / h);
@@ -1020,6 +1053,7 @@
 
         // Convert existing non-data image URLs in rows to resized data-URLs and batch-save
         document.getElementById('convert-images').addEventListener('click', async () => {
+            const convertButton = document.getElementById('convert-images');
             if (!Array.isArray(rows) || !rows.length) {
                 setStatus('No rows to process.');
                 return;
@@ -1028,24 +1062,31 @@
                 setStatus('Firebase batch helper not available.');
                 return;
             }
-            setStatus('Scanning images for conversion...');
-            showNotification('Preparing to convert images...', 'info');
             const toConvert = [];
             rows.forEach(r => {
-                const img = String(r.image || '').trim();
-                if (!img) return;
-                if (img.startsWith('data:')) return; // already data URL
-                toConvert.push({ id: r.id, url: img });
+                const imageUrl = String(r.image || '').trim();
+                const thumbUrl = String(r.imageThumb || '').trim();
+                if (imageUrl && !imageUrl.startsWith('data:')) {
+                    toConvert.push({ id: r.id, url: imageUrl, field: 'image' });
+                    return;
+                }
+                if (thumbUrl && !thumbUrl.startsWith('data:')) {
+                    toConvert.push({ id: r.id, url: thumbUrl, field: 'imageThumb' });
+                }
             });
             if (!toConvert.length) {
                 setStatus('No external images found to convert.');
+                showNotification('No external images found to convert.', 'info');
                 return;
             }
+            convertButton.disabled = true;
+            convertButton.textContent = 'Converting...';
             setStatus(`Converting ${toConvert.length} images...`);
             showNotification(`Converting ${toConvert.length} images...`, 'info');
             const concurrency = 4;
             let idx = 0;
             const changed = [];
+            const failedItems = [];
             async function worker() {
                 while (idx < toConvert.length) {
                     const i = idx++;
@@ -1054,12 +1095,25 @@
                         const dataUrl = await resizeImageFromUrl(item.url, 800, 800, 0.8);
                         const row = rows.find(r => Number(r.id) === Number(item.id));
                         if (row) {
-                            row.image = dataUrl;
+                            if (item.field === 'image') {
+                                row.image = dataUrl;
+                                try {
+                                    row.imageThumb = await createThumbnailFromDataUrl(dataUrl, 240, 0.75);
+                                } catch (thumbError) {
+                                    console.warn('Thumbnail creation failed for', item.url, thumbError);
+                                }
+                            } else {
+                                row.imageThumb = dataUrl;
+                                if (!row.image || row.image.startsWith('data:')) {
+                                    row.image = dataUrl;
+                                }
+                            }
                             markRowChanged(row.id);
                             changed.push(row);
                         }
-                        setStatus(`Converted ${Math.min(i+1, toConvert.length)}/${toConvert.length}`);
+                        setStatus(`Converted ${Math.min(i + 1, toConvert.length)}/${toConvert.length} images...`);
                     } catch (e) {
+                        failedItems.push({ url: item.url, field: item.field, error: String(e) });
                         console.warn('Conversion failed for', item.url, e);
                     }
                 }
@@ -1067,8 +1121,16 @@
             const workers = [];
             for (let i = 0; i < concurrency; i++) workers.push(worker());
             await Promise.all(workers);
+            const failedCount = failedItems.length;
             if (!changed.length) {
-                setStatus('No images converted successfully.');
+                const message = failedCount
+                    ? `No images converted successfully. ${failedCount} failed.`
+                    : 'No images converted successfully.';
+                setStatus(message);
+                showNotification(message, 'error');
+                if (failedCount) console.warn('Image conversion failed for URLs:', failedItems);
+                convertButton.disabled = false;
+                convertButton.textContent = 'Convert images (optimize)';
                 return;
             }
             // Batch save changed rows
@@ -1080,14 +1142,22 @@
                 saveLocalInventory();
                 renderTable();
                 resetChangeTracking();
-                setStatus(`Converted and saved ${changed.length} images.`);
-                showNotification(`Converted and saved ${changed.length} images.`, 'success');
+                const message = failedCount
+                    ? `Converted and saved ${changed.length} images. ${failedCount} failed.`
+                    : `Converted and saved ${changed.length} images.`;
+                setStatus(message);
+                showNotification(message, 'success');
+                if (failedCount) console.warn('Image conversion failed for URLs:', failedItems);
                 setSaveButtonEnabled(false, 'Save changes');
             } else {
-                setStatus(`Failed saving converted images: ${saveRes?.error || 'unknown'}`);
-                showNotification(`Failed saving converted images: ${saveRes?.error || 'unknown'}`, 'error');
+                const message = `Failed saving converted images: ${saveRes?.error || 'unknown'}`;
+                setStatus(message);
+                showNotification(message, 'error');
                 setSaveButtonEnabled(true, 'Save changes');
+                if (failedCount) console.warn('Image conversion failed for URLs:', failedItems);
             }
+            convertButton.disabled = false;
+            convertButton.textContent = 'Convert images (optimize)';
         });
 
         function renderTable() {
@@ -1115,7 +1185,7 @@
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="image-cell">
-                        ${imagePreviewHtml(row)}
+                        ${imagePreviewHtml(row.imageThumb || row.image)}
                         <div class="image-actions">
                             <input type="text" value="${escapeAttr(row.image)}" data-field="image" data-index="${index}" placeholder="Image URL">
                             <label class="file-btn secondary" style="font-size:0.8rem;padding:0.4rem 0.6rem;">
