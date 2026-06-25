@@ -890,7 +890,22 @@
             rows = imported;
             saveLocalInventory();
             renderTable();
-            setSaveButtonEnabled(true);
+
+            if (window.FirebaseClient && window.FirebaseClient.setProductsArray) {
+                setStatus('Syncing restored inventory to Firebase...');
+                const syncRes = await window.FirebaseClient.setProductsArray(rows);
+                if (syncRes && syncRes.ok) {
+                    setStatus(`Restored ${rows.length} rows from inventory.csv and synced to Firebase.`);
+                    setSaveButtonEnabled(false);
+                } else {
+                    setStatus(`Restored ${rows.length} rows from inventory.csv. Firebase sync failed: ${syncRes?.error || 'unknown'}`);
+                    setSaveButtonEnabled(true);
+                }
+            } else {
+                setStatus(`Restored ${rows.length} rows from inventory.csv. Click Save changes to publish.`);
+                setSaveButtonEnabled(true);
+            }
+
             return true;
         }
 
