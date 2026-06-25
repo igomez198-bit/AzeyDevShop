@@ -281,6 +281,8 @@
     <link rel="stylesheet" href="features.css">
     <script src="inventory-config.js"></script>
     <script src="products.js"></script>
+    <script src="api-client.js"></script>
+    <script type="module" src="firebase-client.js"></script>
     <script src="cart-utils.js"></script>
     <script src="features.js"></script>
 </head>
@@ -322,6 +324,10 @@
             <button type="button" class="secondary" id="reset-data">Reset to Loaded Data</button>
             <button type="button" class="success" id="download-csv">Download inventory.csv</button>
             <button type="button" class="success" id="download-js">Download products.js</button>
+            <button type="button" class="secondary" id="push-server">Save to server</button>
+            <button type="button" class="secondary" id="save-firebase">Save to Firebase</button>
+            <button type="button" class="secondary" id="load-firebase">Load from Firebase</button>
+            <button type="button" class="secondary" id="import-to-firebase">Import existing -> Firebase</button>
             <label class="file-btn secondary">
                 Import CSV
                 <input type="file" id="import-csv" accept=".csv,text/csv">
@@ -345,6 +351,26 @@
                 <span>Inventory value</span>
                 <strong id="stat-value">₱0.00</strong>
             </div>
+        </div>
+
+        <div id="single-add" style="margin:1rem 0;padding:1rem;border:2px solid rgba(0,255,255,0.06);background:rgba(0,0,0,0.2);">
+            <strong style="display:block;margin-bottom:0.5rem;color:var(--muted)">Quick Add Item (adds a single product to Firebase)</strong>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;align-items:center">
+                <input id="quick-name" placeholder="Name" style="padding:0.5rem;border:2px solid var(--border);background:var(--bg-secondary);color:var(--text);min-width:180px">
+                <input id="quick-type" placeholder="Type" style="padding:0.5rem;border:2px solid var(--border);background:var(--bg-secondary);color:var(--text);min-width:120px">
+                <input id="quick-price" type="number" placeholder="Price" style="padding:0.5rem;border:2px solid var(--border);background:var(--bg-secondary);color:var(--text);width:120px">
+                <input id="quick-stock" type="number" placeholder="Stock" style="padding:0.5rem;border:2px solid var(--border);background:var(--bg-secondary);color:var(--text);width:120px">
+                <input id="quick-image" placeholder="Image URL" style="padding:0.5rem;border:2px solid var(--border);background:var(--bg-secondary);color:var(--text);min-width:220px">
+                <button id="quick-add-btn" class="success" style="padding:0.5rem 0.9rem">Add to Firebase</button>
+            </div>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.5rem">
+                <input id="quick-generalTrait" placeholder="General Trait" style="padding:0.45rem;border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);min-width:160px">
+                <input id="quick-combatTerriCraft" placeholder="Combat/Terri/Craft" style="padding:0.45rem;border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);min-width:160px">
+                <input id="quick-deviatedTrait" placeholder="Deviated Trait" style="padding:0.45rem;border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);min-width:160px">
+                <input id="quick-scpTrait" placeholder="SCP Trait" style="padding:0.45rem;border:1px solid var(--border);background:var(--bg-secondary);color:var(--text);min-width:160px">
+            </div>
+            <div id="quick-add-error" style="color:#ffb3b3;margin-top:0.5rem;font-size:0.95rem;min-height:1.2rem"></div>
+            <div style="margin-top:0.5rem;color:var(--muted);font-size:0.9rem">Fields not provided will use sensible defaults.</div>
         </div>
 
         <div class="panel">
@@ -790,6 +816,156 @@
             syncFromInputs();            saveLocalInventory();            const content = 'window.PRODUCTS = ' + JSON.stringify(rows, null, 4) + ';\n';
             downloadFile('products.js', content, 'text/javascript;charset=utf-8');
             setStatus(`Downloaded products.js with ${rows.length} rows. Replace the file in your project folder.`);
+        });
+
+        document.getElementById('push-server').addEventListener('click', async () => {
+            syncFromInputs();
+            saveLocalInventory();
+            if (!window.ApiClient || !window.ApiClient.pushInventory) {
+                setStatus('API client not available. Is the server running?');
+                return;
+            }
+            setStatus('Saving to server...');
+            const res = await window.ApiClient.pushInventory(rows);
+            if (res && res.ok) {
+                setStatus(`Saved ${res.count} items to server.`);
+            } else if (res && res.error) {
+                setStatus('Server error: ' + res.error);
+            } else {
+                setStatus('Unexpected response from server.');
+            }
+        });
+
+        document.getElementById('save-firebase').addEventListener('click', async () => {
+            syncFromInputs();
+            saveLocalInventory();
+            if (!window.FirebaseClient || !window.FirebaseClient.setProductsArray) {
+                setStatus('Firebase client not available.');
+                return;
+            }
+            setStatus('Saving to Firebase...');
+            const res = await window.FirebaseClient.setProductsArray(rows);
+            if (res && res.ok) setStatus(`Saved ${res.count} items to Firebase.`);
+            else setStatus('Firebase save failed: ' + (res && res.error ? res.error : 'unknown'));
+        });
+
+        document.getElementById('load-firebase').addEventListener('click', async () => {
+            if (!window.FirebaseClient || !window.FirebaseClient.fetchProductsOnce) {
+                setStatus('Firebase client not available.');
+                return;
+            }
+            setStatus('Loading from Firebase...');
+            const data = await window.FirebaseClient.fetchProductsOnce();
+            if (Array.isArray(data)) {
+                rows = data.map(normalizeRow);
+                saveLocalInventory();
+                renderTable();
+                setStatus(`Loaded ${rows.length} items from Firebase.`);
+            } else {
+                setStatus('Failed to load from Firebase.');
+            }
+        });
+
+        document.getElementById('import-to-firebase').addEventListener('click', async () => {
+            // Import existing local inventory (from rows or window.PRODUCTS) into Firebase
+            syncFromInputs();
+            saveLocalInventory();
+            let dataToImport = rows && rows.length ? rows : (Array.isArray(window.PRODUCTS) ? window.PRODUCTS : []);
+            if (!dataToImport.length) {
+                setStatus('No local inventory found to import.');
+                return;
+            }
+            if (!window.FirebaseClient || !window.FirebaseClient.setProductsArray) {
+                setStatus('Firebase client not available.');
+                return;
+            }
+            if (!confirm(`Import ${dataToImport.length} items into Firebase? This will overwrite existing Firebase products.`)) return;
+            setStatus('Importing to Firebase...');
+            const res = await window.FirebaseClient.setProductsArray(dataToImport.map(normalizeRow));
+            if (res && res.ok) {
+                setStatus(`Imported ${res.count} items to Firebase.`);
+            } else {
+                setStatus('Import failed: ' + (res && res.error ? res.error : 'unknown'));
+            }
+        });
+
+        document.getElementById('quick-add-btn').addEventListener('click', async () => {
+            const nameEl = document.getElementById('quick-name');
+            const typeEl = document.getElementById('quick-type');
+            const priceEl = document.getElementById('quick-price');
+            const stockEl = document.getElementById('quick-stock');
+            const imageEl = document.getElementById('quick-image');
+            const generalEl = document.getElementById('quick-generalTrait');
+            const combatEl = document.getElementById('quick-combatTerriCraft');
+            const deviatedEl = document.getElementById('quick-deviatedTrait');
+            const scpEl = document.getElementById('quick-scpTrait');
+            const errorEl = document.getElementById('quick-add-error');
+
+            const name = nameEl.value.trim();
+            const type = typeEl.value.trim() || 'Normal';
+            const price = Number(priceEl.value);
+            const stock = Number(stockEl.value);
+            const image = imageEl.value.trim() || '';
+            const generalTrait = generalEl.value.trim();
+            const combatTerriCraft = combatEl.value.trim();
+            const deviatedTrait = deviatedEl.value.trim();
+            const scpTrait = scpEl.value.trim();
+
+            // Clear previous error
+            errorEl.textContent = '';
+
+            // Validation
+            if (!name) { errorEl.textContent = 'Name is required.'; nameEl.focus(); return; }
+            if (!Number.isFinite(price) || price < 0) { errorEl.textContent = 'Price must be a number >= 0.'; priceEl.focus(); return; }
+            if (!Number.isFinite(stock) || stock < 0) { errorEl.textContent = 'Stock must be a number >= 0.'; stockEl.focus(); return; }
+            const MAX_LEN = 250;
+            if (name.length > MAX_LEN || generalTrait.length > MAX_LEN || combatTerriCraft.length > MAX_LEN || deviatedTrait.length > MAX_LEN || scpTrait.length > MAX_LEN) {
+                errorEl.textContent = `Fields must be under ${MAX_LEN} characters.`; return;
+            }
+
+            if (!window.FirebaseClient || !window.FirebaseClient.addProduct) {
+                errorEl.textContent = 'Firebase client not available.'; return;
+            }
+
+            setStatus('Adding item to Firebase...');
+            const product = {
+                name,
+                type,
+                price: Number(price) || 0,
+                stock: Number(stock) || 0,
+                image,
+                generalTrait,
+                combatTerriCraft,
+                deviatedTrait,
+                scpTrait,
+                sold: 0,
+                status: (Number(stock) || 0) > 0 ? 'In Stock' : 'Out of Stock'
+            };
+            const res = await window.FirebaseClient.addProduct(product);
+            if (res && res.ok) {
+                // fetch latest list to update local view
+                const latest = await window.FirebaseClient.fetchProductsOnce();
+                if (Array.isArray(latest)) {
+                    rows = latest.map(normalizeRow);
+                    saveLocalInventory();
+                    renderTable();
+                }
+                setStatus(`Added item '${name}' (id ${res.id}) to Firebase.`);
+                // clear quick form
+                nameEl.value = '';
+                typeEl.value = '';
+                priceEl.value = '';
+                stockEl.value = '';
+                imageEl.value = '';
+                generalEl.value = '';
+                combatEl.value = '';
+                deviatedEl.value = '';
+                scpEl.value = '';
+                errorEl.textContent = '';
+            } else {
+                errorEl.textContent = 'Failed to add item: ' + (res && res.error ? res.error : 'unknown');
+                setStatus('Failed to add item.');
+            }
         });
 
         document.getElementById('import-csv').addEventListener('change', async (event) => {
