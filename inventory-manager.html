@@ -457,6 +457,20 @@
             authError.textContent = '';
         }
 
+        async function initializeInventoryManager() {
+            rows = loadLocalInventory() || [];
+            saveLocalInventory();
+            renderTable();
+            bindFirebaseUpdatesToTable();
+            setSaveButtonEnabled(false);
+            setStatus('Loading inventory...');
+            const ok = await updateRowsFromFirebase();
+            if (!ok) {
+                setStatus('Unable to load from Firebase yet. Edit local data and click Save changes when ready.');
+                setSaveButtonEnabled(true);
+            }
+        }
+
         async function unlockSheet() {
             authError.textContent = '';
             const passcode = passcodeInput.value.trim();
@@ -470,7 +484,7 @@
                 return;
             }
             setAuthenticated();
-            renderTable();
+            await initializeInventoryManager();
         }
 
         function nextId() {
@@ -929,18 +943,7 @@
 
         if (isAuthenticated()) {
             setAuthenticated();
-            rows = loadLocalInventory() || [];
-            saveLocalInventory();
-            renderTable();
-            bindFirebaseUpdatesToTable();
-            setSaveButtonEnabled(false);
-            setStatus('Loading inventory...');
-            updateRowsFromFirebase().then(ok => {
-                if (!ok) {
-                    setStatus('Unable to load from Firebase yet. Edit local data and click Save changes when ready.');
-                    setSaveButtonEnabled(true);
-                }
-            });
+            initializeInventoryManager();
         }
     </script>
 </body>
