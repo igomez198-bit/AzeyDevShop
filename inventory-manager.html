@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azey Dev Shop | Inventory Manager</title>
+    <style>
+        :root {
+            --primary: #00ffff;
+            --primary-dark: #00d9ff;
+            --secondary: #ff006e;
+            --accent: #ffbe0b;
+            --bg: #0a0e27;
+            --bg-secondary: #1a1f3a;
+            --text: #e0f7ff;
+            --card: #151b34;
+            --muted: #88d9ff;
+            --border: rgba(0, 255, 255, 0.3);
+            --accent-alt: #06b6d4;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+        body { background: linear-gradient(180deg, #0a0e27 0%, #0f1835 100%); color: var(--text); line-height: 1.5; position: relative; overflow-x: hidden; }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 255, 255, 0.03) 0px,
+                rgba(0, 255, 255, 0.03) 2px,
+                transparent 2px,
+                transparent 4px
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        nav {
+            background: rgba(10, 14, 29, 0.98);
+            padding: 1rem 2rem;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(148, 163, 184, 0.08);
+            backdrop-filter: blur(12px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+
+        nav a { color: var(--text); text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem; border-radius: 999px; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(56, 189, 248, 0.24); transition: transform 0.2s, box-shadow 0.2s, background 0.2s; margin-left: 0.5rem; }
+        nav a:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(56, 189, 248, 0.16); background: rgba(56, 189, 248, 0.08); }
+        .logo { font-weight: 800; font-size: 1.5rem; color: var(--primary); text-decoration: none; letter-spacing: 0.03em; margin-left: 0; }
+        .cta-button { background-color: var(--primary); color: white; border: none !important; padding: 0.75rem 1.5rem !important; border-radius: 0.5rem !important; text-decoration: none; font-weight: 600; transition: background 0.2s; }
+        .cta-button:hover { background-color: var(--secondary); transform: none; box-shadow: none; }
+        .nav-actions { display: flex; align-items: center; gap: 0.5rem; }
+
+        main { max-width: 1500px; margin: 0 auto; padding: 1.5rem; }
+
+        h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+
+        .intro { color: var(--muted); margin-bottom: 1.5rem; max-width: 900px; font-size: 1.05rem; }
+
+        .toolbar { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 1rem; }
+
+        button, .file-btn {
+            border: 2px solid var(--primary);
+            border-radius: 0;
+            padding: 0.65rem 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: var(--primary);
+            color: var(--bg);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.2s;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+        
+        button:hover, .file-btn:hover {
+            box-shadow: 0 0 20px var(--primary);
+            transform: translate(-2px, -2px);
+        }
+
+        button.secondary { background: var(--secondary); color: white; border-color: var(--secondary); box-shadow: 0 0 10px rgba(255, 0, 110, 0.3); }
+        button.success { background: #00ff41; color: #0a0e27; border-color: #00ff41; box-shadow: 0 0 10px rgba(0, 255, 65, 0.3); }
+        button.danger { background: #ff0055; color: white; border-color: #ff0055; box-shadow: 0 0 10px rgba(255, 0, 85, 0.3); }
+
+        .file-btn {
+            display: inline-flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .file-btn input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+        .panel {
+            background: transparent;
+            border: none;
+            border-radius: 0;
+            padding: 0;
+            margin-bottom: 1rem;
+            overflow-x: visible;
+            box-shadow: none;
+        }
+
+        table { width: 100%; border-collapse: collapse; min-width: auto; }
+
+        th, td {
+            border-bottom: 1px solid rgba(0, 255, 255, 0.2);
+            padding: 0.75rem;
+            text-align: left;
+            vertical-align: top;
+            font-size: 1rem;
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        th { background: rgba(0, 255, 255, 0.1); position: sticky; top: 0; z-index: 1; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; font-size: 1.05rem; }
+
+        td input, td select, td textarea {
+            width: 100%;
+            min-width: 80px;
+            padding: 0.6rem 0.75rem;
+            border: none;
+            border-bottom: 2px solid transparent;
+            border-radius: 0;
+            background: transparent;
+            color: var(--text);
+            transition: all 0.2s;
+            font-size: 1rem;
+            line-height: 1.4;
+        }
+        
+        td input:focus, td select:focus, td textarea:focus {
+            border-color: var(--primary);
+            background: var(--bg-secondary);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+            outline: none;
+        }
+            color: var(--text);
+        }
+
+        td textarea { min-height: 54px; resize: vertical; font-size: 1rem; }
+
+        .image-cell { min-width: 180px; }
+
+        .image-preview {
+            width: 72px;
+            height: 72px;
+            border-radius: 0;
+            object-fit: cover;
+            border: 2px solid var(--border);
+            background: var(--bg-secondary);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .image-preview.empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--muted);
+            font-size: 1.5rem;
+        }
+
+        .image-actions { display: flex; flex-direction: column; gap: 0.35rem; }
+
+        .inventory-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: 0;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            color: var(--text);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.1);
+        }
+
+        .stat-card span {
+            color: var(--muted);
+            font-size: 0.9rem;
+        }
+
+        .stat-card strong {
+            font-size: 1.35rem;
+            color: var(--primary);
+            text-shadow: 0 0 8px rgba(0, 255, 255, 0.3);
+        }
+
+        .row-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.45rem;
+            justify-content: flex-start;
+            align-items: center;
+        }
+
+        .row-actions button {
+            background: var(--primary);
+            color: var(--bg);
+            border: 2px solid var(--primary);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+            padding: 0.45rem 0.9rem;
+            font-size: 0.82rem;
+            min-width: 100px;
+            border-radius: 0;
+            transition: all 0.18s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .row-actions button:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 0 0 25px var(--primary);
+            background: rgba(0, 255, 255, 0.9);
+        }
+
+        .status { margin-top: 0.75rem; color: var(--muted); font-size: 0.9rem; }
+
+        .auth-screen {
+            min-height: calc(100vh - 72px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 420px;
+            background: var(--card);
+            border: 2px solid var(--border);
+            border-radius: 0;
+            padding: 2rem;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+        }
+
+        .auth-card h2 { margin-bottom: 0.75rem; }
+        .auth-card p { color: var(--muted); margin-bottom: 1rem; }
+
+        .auth-card input {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 0;
+            margin-bottom: 1rem;
+            background: var(--bg-secondary);
+            color: var(--text);
+            transition: all 0.2s;
+        }
+        
+        .auth-card input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+            outline: none;
+        }
+
+        .auth-error { color: #dc2626; font-size: 0.9rem; min-height: 1.25rem; margin-bottom: 0.75rem; }
+
+        .hidden { display: none !important; }
+    </style>
+    <link rel="stylesheet" href="features.css">
+    <script src="inventory-config.js"></script>
+    <script src="products.js"></script>
+    <script src="cart-utils.js"></script>
+    <script src="features.js"></script>
+</head>
+<body>
+    <nav>
+        <a href="index.html" class="logo">Azey Dev Shop</a>
+        <div class="nav-actions">
+            <a href="index.html" class="cta-button" style="padding:0.5rem 1rem;font-size:0.95rem;">Home</a>
+            <a href="deviations.html" class="cta-button" style="padding:0.5rem 1rem;font-size:0.95rem;">Browse Deviations</a>
+            <a href="custom-orders.html" class="cta-button" style="padding:0.5rem 1rem;font-size:0.95rem;">Custom Orders</a>
+            <a href="inventory-manager.html" title="Inventory Manager">
+                <span class="nav-icon">⚙️</span>
+                Admin
+            </a>
+            <button type="button" class="secondary hidden" id="logout-btn" style="margin-left:0.5rem;padding:0.5rem 1rem;font-size:0.95rem;">Lock Sheet</button>
+        </div>
+    </nav>
+
+    <section id="auth-screen" class="auth-screen">
+        <div class="auth-card">
+            <h2>Inventory Access</h2>
+            <p>This sheet is protected. Enter your passcode to edit stock, prices, and images.</p>
+            <input type="password" id="passcode-input" placeholder="Enter passcode" autocomplete="current-password">
+            <div class="auth-error" id="auth-error"></div>
+            <button type="button" id="unlock-btn" style="width:100%;">Unlock Inventory</button>
+        </div>
+    </section>
+
+    <main id="inventory-app" class="hidden">
+        <h1>Inventory Database Sheet</h1>
+        <p class="intro">
+            Add or edit deviations here. Upload a picture per item (saved as image URL or embedded data in
+            <strong>products.js</strong>). When done, download the updated files and replace them in your project folder.
+        </p>
+
+        <div class="toolbar">
+            <input id="inventory-search" type="search" placeholder="Search inventory..." style="flex:1 1 260px; min-width:220px; padding:0.75rem 1rem; border-radius:0; border:2px solid var(--primary); background:var(--bg-secondary); color:var(--text); margin-right:0.8rem; box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);">
+            <button type="button" id="add-row">+ Add Row</button>
+            <button type="button" class="secondary" id="reset-data">Reset to Loaded Data</button>
+            <button type="button" class="success" id="download-csv">Download inventory.csv</button>
+            <button type="button" class="success" id="download-js">Download products.js</button>
+            <label class="file-btn secondary">
+                Import CSV
+                <input type="file" id="import-csv" accept=".csv,text/csv">
+            </label>
+        </div>
+
+        <div class="inventory-stats">
+            <div class="stat-card">
+                <span>Total items</span>
+                <strong id="stat-items">0</strong>
+            </div>
+            <div class="stat-card">
+                <span>Total stock</span>
+                <strong id="stat-stock">0</strong>
+            </div>
+            <div class="stat-card">
+                <span>Total sold</span>
+                <strong id="stat-sold">0</strong>
+            </div>
+            <div class="stat-card">
+                <span>Inventory value</span>
+                <strong id="stat-value">₱0.00</strong>
+            </div>
+        </div>
+
+        <div class="panel">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Image</th>
+                        <th>Name</th>
+                        <th>Type</th>
+                        <th>General Trait</th>
+                        <th>Combat/Terri/Craft</th>
+                        <th>Deviated Trait</th>
+                        <th>SCP Trait</th>
+                        <th>Stock</th>
+                        <th>Price (PHP)</th>
+                        <th>Sold</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody id="inventory-body"></tbody>
+            </table>
+        </div>
+        <p class="status" id="status">Loaded inventory.</p>
+    </main>
+
+    <script>
+        const FIELDS = [
+            'id', 'image', 'name', 'type', 'generalTrait', 'combatTerriCraft',
+            'deviatedTrait', 'scpTrait', 'stock', 'price', 'sold', 'status'
+        ];
+        const TYPE_OPTIONS = ['Starfall', 'Variant', 'Lunar', 'Chaos', 'Normal'];
+        const STATUS_OPTIONS = ['In Stock', 'Out of Stock'];
+        const INVENTORY_KEY = 'deviation_inventory_v1';
+
+        let rows = [];
+        let inventorySearchTerm = '';
+
+        const authScreen = document.getElementById('auth-screen');
+        const inventorySearchInput = document.getElementById('inventory-search');
+        const inventoryApp = document.getElementById('inventory-app');
+        const authError = document.getElementById('auth-error');
+        const passcodeInput = document.getElementById('passcode-input');
+        const logoutBtn = document.getElementById('logout-btn');
+        const bodyEl = document.getElementById('inventory-body');
+        const statusEl = document.getElementById('status');
+
+        async function hashPasscode(value) {
+            const data = new TextEncoder().encode(value);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            return Array.from(new Uint8Array(hashBuffer))
+                .map(byte => byte.toString(16).padStart(2, '0'))
+                .join('');
+        }
+
+        function isAuthenticated() {
+            try {
+                const raw = sessionStorage.getItem(window.INVENTORY_AUTH.SESSION_KEY);
+                if (!raw) return false;
+                const session = JSON.parse(raw);
+                if (!session || !session.expiresAt) return false;
+                return Date.now() < session.expiresAt;
+            } catch (error) {
+                return false;
+            }
+        }
+
+        function setAuthenticated() {
+            const expiresAt = Date.now() + (window.INVENTORY_AUTH.SESSION_HOURS * 60 * 60 * 1000);
+            sessionStorage.setItem(window.INVENTORY_AUTH.SESSION_KEY, JSON.stringify({ expiresAt }));
+            authScreen.classList.add('hidden');
+            inventoryApp.classList.remove('hidden');
+            logoutBtn.classList.remove('hidden');
+        }
+
+        function lockSheet() {
+            sessionStorage.removeItem(window.INVENTORY_AUTH.SESSION_KEY);
+            authScreen.classList.remove('hidden');
+            inventoryApp.classList.add('hidden');
+            logoutBtn.classList.add('hidden');
+            passcodeInput.value = '';
+            authError.textContent = '';
+        }
+
+        async function unlockSheet() {
+            authError.textContent = '';
+            const passcode = passcodeInput.value.trim();
+            if (!passcode) {
+                authError.textContent = 'Enter your passcode.';
+                return;
+            }
+            const hash = await hashPasscode(passcode);
+            if (hash !== window.INVENTORY_AUTH.PASSCODE_HASH) {
+                authError.textContent = 'Incorrect passcode.';
+                return;
+            }
+            setAuthenticated();
+            renderTable();
+        }
+
+        function nextId() {
+            return rows.reduce((max, row) => Math.max(max, Number(row.id) || 0), 0) + 1;
+        }
+
+        function normalizeRow(raw) {
+            const stock = Math.max(0, Number(raw.stock) || 0);
+            const statusValue = String(raw.status || (stock > 0 ? 'In Stock' : 'Out of Stock')).trim() || 'In Stock';
+            return {
+                id: Number(raw.id) || nextId(),
+                image: String(raw.image || '').trim(),
+                name: String(raw.name || '').trim(),
+                type: String(raw.type || 'Normal').trim(),
+                generalTrait: String(raw.generalTrait || '').trim(),
+                combatTerriCraft: String(raw.combatTerriCraft || '').trim(),
+                deviatedTrait: String(raw.deviatedTrait || '').trim(),
+                scpTrait: String(raw.scpTrait || '').trim(),
+                stock,
+                price: Math.max(0, Number(raw.price) || 0),
+                status: stock <= 0 ? 'Out of Stock' : statusValue,
+                sold: Math.max(0, Number(raw.sold) || 0)
+            };
+        }
+
+        function setStatus(message) {
+            statusEl.textContent = message;
+        }
+
+        function loadLocalInventory() {
+            if (typeof window === 'undefined' || !window.localStorage) return null;
+            try {
+                const raw = window.localStorage.getItem(INVENTORY_KEY);
+                const parsed = raw ? JSON.parse(raw) : null;
+                if (Array.isArray(parsed)) return parsed.map(normalizeRow);
+            } catch (error) {
+                // ignore
+            }
+            return null;
+        }
+
+        function saveLocalInventory() {
+            if (typeof window === 'undefined' || !window.localStorage) return;
+            try {
+                rows = rows.map(normalizeRow);
+                window.localStorage.setItem(INVENTORY_KEY, JSON.stringify(rows));
+                window.PRODUCTS = rows;
+            } catch (error) {
+                // ignore
+            }
+        }
+
+        function escapeAttr(value) {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/</g, '&lt;');
+        }
+
+        function imagePreviewHtml(image) {
+            if (image) {
+                return `<img class="image-preview" src="${escapeAttr(image)}" alt="Preview">`;
+            }
+            return `<div class="image-preview empty">🖼️</div>`;
+        }
+
+        function renderTable() {
+            bodyEl.innerHTML = '';
+            const filteredRows = rows
+                .map((row, index) => ({ row, index }))
+                .filter(({ row }) => {
+                    if (!inventorySearchTerm) return true;
+                    const query = inventorySearchTerm.toLowerCase();
+                    return [row.name, row.type, row.generalTrait, row.combatTerriCraft, row.deviatedTrait, row.scpTrait, row.status]
+                        .join(' ')
+                        .toLowerCase()
+                        .includes(query);
+                });
+            if (!filteredRows.length) {
+                bodyEl.innerHTML = `
+                    <tr>
+                        <td colspan="13" style="padding:1.5rem;text-align:center;color:var(--muted);">No inventory items match your search.</td>
+                    </tr>
+                `;
+                updateInventoryStats();
+                return;
+            }
+            filteredRows.forEach(({ row, index }) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><input type="number" min="1" value="${row.id}" data-field="id" data-index="${index}"></td>
+                    <td class="image-cell">
+                        ${imagePreviewHtml(row.image)}
+                        <div class="image-actions">
+                            <input type="text" value="${escapeAttr(row.image)}" data-field="image" data-index="${index}" placeholder="Image URL">
+                            <label class="file-btn secondary" style="font-size:0.8rem;padding:0.4rem 0.6rem;">
+                                Upload Image
+                                <input type="file" accept="image/*" data-upload="${index}">
+                            </label>
+                            <button type="button" class="secondary" data-clear-image="${index}" style="font-size:0.8rem;padding:0.4rem 0.6rem;">Clear Image</button>
+                        </div>
+                    </td>
+                    <td><input type="text" value="${escapeAttr(row.name)}" data-field="name" data-index="${index}"></td>
+                    <td>
+                        <select data-field="type" data-index="${index}">
+                            ${TYPE_OPTIONS.map(option => `<option value="${option}" ${row.type === option ? 'selected' : ''}>${option}</option>`).join('')}
+                        </select>
+                    </td>
+                    <td><input type="text" value="${escapeAttr(row.generalTrait)}" data-field="generalTrait" data-index="${index}"></td>
+                    <td><input type="text" value="${escapeAttr(row.combatTerriCraft)}" data-field="combatTerriCraft" data-index="${index}"></td>
+                    <td><input type="text" value="${escapeAttr(row.deviatedTrait)}" data-field="deviatedTrait" data-index="${index}"></td>
+                    <td><input type="text" value="${escapeAttr(row.scpTrait)}" data-field="scpTrait" data-index="${index}"></td>
+                    <td><input type="number" min="0" value="${row.stock}" data-field="stock" data-index="${index}"></td>
+                    <td><input type="number" min="0" step="0.01" value="${row.price}" data-field="price" data-index="${index}"></td>
+                    <td><input type="number" min="0" value="${row.sold}" data-field="sold" data-index="${index}"></td>
+                    <td>
+                        <select data-field="status" data-index="${index}">
+                            ${STATUS_OPTIONS.map(option => `<option value="${option}" ${row.status === option ? 'selected' : ''}>${option}</option>`).join('')}
+                        </select>
+                    </td>
+                    <td class="row-actions"><button type="button" data-sell="${index}">Sold +1</button><button type="button" data-duplicate="${index}">Duplicate</button><button type="button" data-remove="${index}">Delete</button></td>
+                `;
+                bodyEl.appendChild(tr);
+            });
+            updateInventoryStats();
+        }
+
+        function updateInventoryStats() {
+            const totalItems = rows.length;
+            const totalStock = rows.reduce((sum, row) => sum + (Number(row.stock) || 0), 0);
+            const totalSold = rows.reduce((sum, row) => sum + (Number(row.sold) || 0), 0);
+            const totalValue = rows.reduce((sum, row) => sum + ((Number(row.stock) || 0) * (Number(row.price) || 0)), 0);
+            document.getElementById('stat-items').textContent = totalItems;
+            document.getElementById('stat-stock').textContent = totalStock;
+            document.getElementById('stat-sold').textContent = totalSold;
+            document.getElementById('stat-value').textContent = `₱${totalValue.toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        }
+
+        function syncFromInputs() {
+            bodyEl.querySelectorAll('[data-field]').forEach(input => {
+                const index = Number(input.dataset.index);
+                const field = input.dataset.field;
+                if (!rows[index]) return;
+                if (field === 'stock' || field === 'price' || field === 'id' || field === 'sold') {
+                    rows[index][field] = Number(input.value);
+                } else {
+                    rows[index][field] = input.value;
+                }
+            });
+            rows = rows.map(normalizeRow);
+        }
+
+        inventorySearchInput.addEventListener('input', () => {
+            inventorySearchTerm = inventorySearchInput.value.trim();
+            renderTable();
+        });
+
+        function downloadFile(filename, content, mime) {
+            const blob = new Blob([content], { type: mime });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = filename;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        function toCsv(data) {
+            const escape = value => {
+                const text = String(value ?? '');
+                if (/[",\n]/.test(text)) return `"${text.replace(/"/g, '""')}"`;
+                return text;
+            };
+            const lines = [FIELDS.join(',')];
+            data.forEach(row => {
+                lines.push(FIELDS.map(field => escape(row[field])).join(','));
+            });
+            return lines.join('\n');
+        }
+
+        function parseCsv(text) {
+            const lines = text.trim().split(/\r?\n/);
+            if (!lines.length) return [];
+            const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+            return lines.slice(1).filter(Boolean).map(line => {
+                const values = [];
+                let current = '';
+                let inQuotes = false;
+                for (let i = 0; i < line.length; i += 1) {
+                    const char = line[i];
+                    if (char === '"') {
+                        if (inQuotes && line[i + 1] === '"') {
+                            current += '"';
+                            i += 1;
+                        } else {
+                            inQuotes = !inQuotes;
+                        }
+                    } else if (char === ',' && !inQuotes) {
+                        values.push(current);
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                values.push(current);
+                const row = {};
+                headers.forEach((header, index) => {
+                    row[header] = values[index] ?? '';
+                });
+                return normalizeRow(row);
+            });
+        }
+
+        bodyEl.addEventListener('input', (event) => {
+            const target = event.target;
+            if (!target.dataset.field) return;
+            const index = Number(target.dataset.index);
+            const field = target.dataset.field;
+            if (!rows[index]) return;
+            rows[index][field] = (field === 'stock' || field === 'price' || field === 'id' || field === 'sold')
+                ? Number(target.value)
+                : target.value;
+            if (field === 'stock') {
+                rows[index].status = rows[index].stock <= 0 ? 'Out of Stock' : 'In Stock';
+            }
+            if (field === 'image') {
+                renderTable();
+            }
+            saveLocalInventory();
+        });
+
+        bodyEl.addEventListener('change', async (event) => {
+            const upload = event.target.closest('[data-upload]');
+            if (!upload) return;
+            const index = Number(upload.dataset.upload);
+            const file = upload.files[0];
+            if (!file || !rows[index]) return;
+            if (file.size > 1024 * 1024) {
+                alert('Image is too large. Please use a file under 1 MB or paste an image URL instead.');
+                upload.value = '';
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = () => {
+                rows[index].image = String(reader.result || '');
+                renderTable();
+                setStatus(`Image added for ${rows[index].name || 'item #' + rows[index].id}.`);
+            };
+            reader.readAsDataURL(file);
+        });
+
+        bodyEl.addEventListener('click', (event) => {
+            const clearBtn = event.target.closest('[data-clear-image]');
+            if (clearBtn) {
+                const index = Number(clearBtn.dataset.clearImage);
+                if (rows[index]) {
+                    rows[index].image = '';
+                    renderTable();
+                    saveLocalInventory();
+                    setStatus('Image cleared.');
+                }
+                return;
+            }
+
+            const sellBtn = event.target.closest('[data-sell]');
+            if (sellBtn) {
+                const index = Number(sellBtn.dataset.sell);
+                if (rows[index] && rows[index].stock > 0) {
+                    rows[index].stock = Math.max(0, rows[index].stock - 1);
+                    rows[index].sold = (rows[index].sold || 0) + 1;
+                    rows[index].status = rows[index].stock <= 0 ? 'Out of Stock' : rows[index].status;
+                    renderTable();
+                    saveLocalInventory();
+                    setStatus(`Marked one sold for ${rows[index].name}. Stock is now ${rows[index].stock}.`);
+                }
+                return;
+            }
+
+            const duplicateBtn = event.target.closest('[data-duplicate]');
+            if (duplicateBtn) {
+                const index = Number(duplicateBtn.dataset.duplicate);
+                if (rows[index]) {
+                    const clone = normalizeRow({ ...rows[index], id: nextId(), name: `${rows[index].name} Copy`, sold: 0 });
+                    rows.splice(index + 1, 0, clone);
+                    renderTable();
+                    saveLocalInventory();
+                    setStatus(`Duplicated row for ${rows[index].name}.`);
+                }
+                return;
+            }
+
+            const button = event.target.closest('[data-remove]');
+            if (!button) return;
+            const index = Number(button.dataset.remove);
+            rows.splice(index, 1);
+            renderTable();
+            saveLocalInventory();
+            setStatus(`Deleted row. ${rows.length} items remaining.`);
+        });
+
+        document.getElementById('unlock-btn').addEventListener('click', unlockSheet);
+        passcodeInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') unlockSheet();
+        });
+        logoutBtn.addEventListener('click', lockSheet);
+
+        document.getElementById('add-row').addEventListener('click', () => {
+            rows.push(normalizeRow({
+                id: nextId(),
+                image: '',
+                name: 'New Deviation',
+                type: 'Normal',
+                generalTrait: '',
+                combatTerriCraft: '',
+                deviatedTrait: '',
+                scpTrait: '',
+                stock: 1,
+                price: 100,
+                status: 'In Stock',
+                sold: 0
+            }));
+            saveLocalInventory();
+            renderTable();
+            setStatus('Added a new row.');
+        });
+
+        document.getElementById('reset-data').addEventListener('click', () => {
+            rows = structuredClone(window.PRODUCTS || []);
+            saveLocalInventory();
+            renderTable();
+            setStatus('Reset to products.js data.');
+        });
+
+        document.getElementById('download-csv').addEventListener('click', () => {
+            syncFromInputs();
+            saveLocalInventory();
+            downloadFile('inventory.csv', toCsv(rows), 'text/csv;charset=utf-8');
+            setStatus(`Downloaded inventory.csv with ${rows.length} rows.`);
+        });
+
+        document.getElementById('download-js').addEventListener('click', () => {
+            syncFromInputs();            saveLocalInventory();            const content = 'window.PRODUCTS = ' + JSON.stringify(rows, null, 4) + ';\n';
+            downloadFile('products.js', content, 'text/javascript;charset=utf-8');
+            setStatus(`Downloaded products.js with ${rows.length} rows. Replace the file in your project folder.`);
+        });
+
+        document.getElementById('import-csv').addEventListener('change', async (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            const text = await file.text();
+            rows = parseCsv(text);
+            saveLocalInventory();
+            renderTable();
+            setStatus(`Imported ${rows.length} rows from ${file.name}.`);
+            event.target.value = '';
+        });
+
+        if (isAuthenticated()) {
+            setAuthenticated();
+            rows = loadLocalInventory() || structuredClone(window.PRODUCTS || []);
+            if (!rows.length) rows = structuredClone(window.PRODUCTS || []);
+            saveLocalInventory();
+            renderTable();
+        }
+    </script>
+</body>
+</html>

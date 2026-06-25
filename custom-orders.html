@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Azey Dev Shop | Custom Orders</title>
+    <link rel="stylesheet" href="features.css">
+    <script src="data-traits.js"></script>
+    <script src="data-deviations.js"></script>
+    <style>
+        :root {
+            --primary: #00ffff;
+            --secondary: #ff006e;
+            --accent: #ffbe0b;
+            --bg: #0a0e27;
+            --bg-secondary: #1a1f3a;
+            --text: #e0f7ff;
+            --card: #151b34;
+            --muted: #88d9ff;
+            --border: rgba(0, 255, 255, 0.3);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: linear-gradient(180deg, #0a0e27 0%, #0f1835 100%);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 255, 255, 0.03) 0px,
+                rgba(0, 255, 255, 0.03) 2px,
+                transparent 2px,
+                transparent 4px
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        nav {
+            background: rgba(10, 14, 29, 0.98);
+            padding: 1rem 2rem;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(148, 163, 184, 0.08);
+            backdrop-filter: blur(12px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--primary);
+            text-decoration: none;
+            letter-spacing: 0.03em;
+        }
+
+        nav > div {
+            display: flex;
+            align-items: center;
+            gap: 0.85rem;
+        }
+
+        nav a {
+            color: var(--text);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(15, 23, 42, 0.95);
+            padding: 0.75rem 1rem;
+            border-radius: 999px;
+            border: 1px solid rgba(56, 189, 248, 0.24);
+            transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+        }
+
+        nav a {
+            white-space: nowrap;
+            line-height: 1;
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        nav a:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 24px rgba(56, 189, 248, 0.16);
+            background: rgba(56, 189, 248, 0.08);
+        }
+
+        .cta-button {
+            background-color: var(--primary);
+            color: white !important;
+            border: none !important;
+            padding: 0.5rem 1rem !important;
+            font-size: 0.95rem !important;
+            border-radius: 0.5rem !important;
+            text-decoration: none;
+            font-weight: 700;
+            transition: background 0.12s, box-shadow 0.12s;
+        }
+
+        .cta-button:hover {
+            background-color: var(--secondary);
+        }
+
+        .tip {
+            background: rgba(255, 190, 11, 0.06);
+            border-left: 4px solid var(--accent);
+            color: #fff;
+            padding: 0.65rem 0.9rem;
+            margin: 0.75rem 0 1rem 0;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 14px rgba(255, 190, 11, 0.06);
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.5rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-section, .receipt-section {
+            background: var(--card);
+            border: 2px solid var(--border);
+            padding: 1.5rem;
+            border-radius: 0;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"],
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text);
+            border-radius: 0;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        input[type="tel"]:focus,
+        select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+            outline: none;
+        }
+
+        .trait-input-group {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .trait-input-group select {
+            flex: 1;
+        }
+
+        .trait-input-group input[type="number"] {
+            width: 80px;
+        }
+
+        button {
+            background: var(--primary);
+            color: var(--bg);
+            border: 2px solid var(--primary);
+            padding: 0.65rem 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.2s;
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        button:hover {
+            box-shadow: 0 0 20px var(--primary);
+            transform: translate(-2px, -2px);
+        }
+
+        button.secondary {
+            background: var(--secondary);
+            border-color: var(--secondary);
+            box-shadow: 0 0 10px rgba(255, 0, 110, 0.3);
+        }
+
+        button.secondary:hover {
+            box-shadow: 0 0 20px var(--secondary);
+        }
+
+        .order-items {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 0;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            min-height: 200px;
+        }
+
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: rgba(0, 255, 255, 0.05);
+            border-left: 3px solid var(--primary);
+            margin-bottom: 0.5rem;
+            gap: 1rem;
+        }
+
+        .order-item span {
+            flex: 1;
+        }
+
+        .order-item button {
+            background: var(--secondary);
+            border-color: var(--secondary);
+            padding: 0.4rem 0.7rem;
+            font-size: 0.75rem;
+            box-shadow: 0 0 8px rgba(255, 0, 110, 0.2);
+        }
+
+        .receipt {
+            display: none;
+            background: var(--card);
+            border: 2px solid var(--primary);
+            padding: 2rem;
+            border-radius: 0;
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+        }
+
+        .receipt.active {
+            display: block;
+        }
+
+        .receipt-header {
+            text-align: center;
+            border-bottom: 2px dashed var(--primary);
+            padding-bottom: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .receipt-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+            margin-bottom: 0.5rem;
+        }
+
+        .receipt-number {
+            color: var(--muted);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .receipt-info {
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+        }
+
+        .receipt-info p {
+            margin-bottom: 0.3rem;
+            color: var(--text);
+        }
+
+        .receipt-items {
+            margin: 1.5rem 0;
+            border-top: 2px dashed var(--primary);
+            border-bottom: 2px dashed var(--primary);
+            padding: 1rem 0;
+        }
+
+        .receipt-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px dotted rgba(0, 255, 255, 0.2);
+        }
+
+        .receipt-item strong {
+            color: var(--primary);
+        }
+
+        .receipt-total {
+            text-align: right;
+            margin: 1rem 0;
+            padding: 1rem;
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid var(--border);
+        }
+
+        .receipt-total p {
+            font-size: 1.1rem;
+            color: var(--muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .receipt-total .total {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--accent);
+            text-shadow: 0 0 8px rgba(255, 190, 11, 0.3);
+        }
+
+        .receipt-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            padding-top: 1rem;
+            border-top: 2px dashed var(--primary);
+            color: var(--muted);
+            font-size: 0.85rem;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .button-group button {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        #receipt-items-list {
+            list-style: none;
+        }
+
+        #receipt-items-list .receipt-item {
+            flex-direction: column;
+            align-items: flex-start;
+            border: none;
+            border-top: 1px dotted rgba(0, 255, 255, 0.2);
+            margin: 0.75rem 0;
+            padding: 0.75rem 0;
+        }
+
+        #receipt-items-list .receipt-item strong {
+            color: var(--accent);
+            margin-bottom: 0.3rem;
+        }
+
+        .no-items {
+            color: var(--muted);
+            text-align: center;
+            padding: 2rem 1rem;
+            opacity: 0.7;
+        }
+
+        @media print {
+            nav, .form-section, .button-group {
+                display: none;
+            }
+
+            body {
+                background: white;
+                color: black;
+            }
+
+            .receipt {
+                border: 1px solid black;
+                box-shadow: none;
+                color: black;
+            }
+
+            .receipt-title, .receipt-item strong {
+                color: black;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="index.html" class="logo">Azey Dev Shop</a>
+        <div class="nav-actions">
+            <a href="index.html" class="cta-button">Home</a>
+            <a href="deviations.html" class="cta-button">Browse Deviations</a>
+            <a href="inventory-manager.html" title="Inventory Manager">
+                <span class="nav-icon">⚙️</span>
+                Admin
+            </a>
+        </div>
+    </nav>
+
+    <main>
+        <h1>Custom Orders</h1>
+        <div class="tip">Tip: Chaos deviations can have up to <strong>5 traits</strong>. Plan accordingly.</div>
+
+        <div class="container">
+            <!-- Order Form -->
+            <div class="form-section">
+                <h2 style="margin-bottom: 1.5rem;">Create Order</h2>
+
+                <div class="form-group">
+                    <label>Customer Name</label>
+                    <input type="text" id="customerName" placeholder="Enter your name">
+                </div>
+
+                <div class="form-group">
+                    <label>Select Deviation</label>
+                    <select id="deviationSelect">
+                        <option value="">-- Choose a deviation --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Order Notes</label>
+                    <input type="text" id="orderNotes" placeholder="Special requests or notes...">
+                </div>
+
+                <div class="form-group">
+                    <label style="margin-bottom: 1rem; display: block;">Select Traits (Optional - Up to 5)</label>
+                    <div id="traitsContainer" style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <!-- 5 trait selectors will be generated here -->
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button onclick="addToOrder()" style="background: var(--accent); border-color: var(--accent); color: var(--bg);">Add to Order</button>
+                    <button class="secondary" onclick="clearForm()">Clear Form</button>
+                </div>
+
+                <!-- Order Items List -->
+                <div style="margin-top: 1.5rem;">
+                    <h3 style="color: var(--muted); margin-bottom: 1rem; text-transform: uppercase;">Items in Order:</h3>
+                    <div class="order-items" id="orderItemsList">
+                        <div class="no-items">
+                            <p>No items added yet. Select a deviation and click "Add to Order"</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-group" style="margin-top: 1rem;">
+                    <button onclick="generateReceipt()">Generate Receipt</button>
+                    <button class="secondary" onclick="clearAllOrder()" style="background: #ff4444; border-color: #ff4444;">Clear All</button>
+                </div>
+            </div>
+
+            <!-- Receipt Section -->
+            <div class="receipt-section">
+                <div id="receipt" class="receipt">
+                    <div class="receipt-header">
+                        <div class="receipt-title">═══ ORDER RECEIPT ═══</div>
+                        <div class="receipt-number">Order #<span id="receiptNumber"></span></div>
+                    </div>
+
+                    <div class="receipt-info">
+                        <p><strong>Customer:</strong> <span id="receiptCustomer">-</span></p>
+                        <p><strong>Date:</strong> <span id="receiptDate">-</span></p>
+                    </div>
+
+                    <div class="receipt-items">
+                        <strong style="display: block; margin-bottom: 1rem; text-transform: uppercase; color: var(--primary);">Order Items:</strong>
+                        <ul id="receipt-items-list"></ul>
+                    </div>
+
+                    <div class="receipt-total">
+                        <p class="total">Status: PENDING</p>
+                    </div>
+
+                    <div class="receipt-footer">
+                        <p>Click <strong>Copy Receipt</strong>, then send it to <strong>Iain Gomez</strong> on Facebook or <strong><em>_azeaze</em></strong> on Discord.</p>
+                        <p style="margin-top: 1rem;">═══════════════════════════</p>
+                        <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                            <button onclick="copyReceipt()" style="padding: 0.5rem 1rem; font-size: 0.75rem; background: var(--accent); border-color: var(--accent); color: var(--bg);">📋 Copy Receipt</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="noReceipt" class="no-items">
+                    <p>Receipt will appear here after submitting your order.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let selectedTraits = ['', '', '', '', ''];
+        let orderItems = [];
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('✓ Traits loaded:', traitsData.length, 'items');
+            console.log('✓ Deviations loaded:', deviationsData.length, 'items');
+            populateDeviationSelect();
+            createTraitSelectors();
+        });
+
+        function populateDeviationSelect() {
+            const select = document.getElementById('deviationSelect');
+            
+            deviationsData.forEach(dev => {
+                const option = document.createElement('option');
+                option.value = dev.name;
+                option.textContent = `${dev.name} (${dev.type})`;
+                select.appendChild(option);
+            });
+        }
+
+        function createTraitSelectors() {
+            const container = document.getElementById('traitsContainer');
+            container.innerHTML = '';
+
+            for (let i = 0; i < 5; i++) {
+                const group = document.createElement('div');
+                group.style.display = 'flex';
+                group.style.alignItems = 'center';
+                group.style.gap = '0.5rem';
+
+                const label = document.createElement('span');
+                label.textContent = `Trait ${i + 1}:`;
+                label.style.color = 'var(--muted)';
+                label.style.fontWeight = '600';
+                label.style.minWidth = '60px';
+
+                const select = document.createElement('select');
+                select.id = `trait${i}`;
+                select.style.flex = '1';
+                select.style.padding = '0.75rem';
+                select.style.border = '2px solid var(--border)';
+                select.style.background = 'var(--bg-secondary)';
+                select.style.color = 'var(--text)';
+                select.style.borderRadius = '0';
+                select.style.fontSize = '1rem';
+                select.style.transition = 'all 0.2s';
+                select.style.fontFamily = 'inherit';
+                
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = '-- Choose trait --';
+                select.appendChild(option);
+
+                const uniqueTraits = [...new Set(traitsData.map(t => t.name))];
+                uniqueTraits.forEach(trait => {
+                    const opt = document.createElement('option');
+                    opt.value = trait;
+                    opt.textContent = trait;
+                    select.appendChild(opt);
+                });
+
+                select.addEventListener('change', (e) => {
+                    selectedTraits[i] = e.target.value;
+                });
+
+                group.appendChild(label);
+                group.appendChild(select);
+                container.appendChild(group);
+            }
+        }
+
+        function addToOrder() {
+            const name = document.getElementById('customerName').value.trim();
+            const deviation = document.getElementById('deviationSelect').value.trim();
+            const notes = document.getElementById('orderNotes').value.trim();
+
+            if (!name) {
+                alert('Please enter your name');
+                return;
+            }
+
+            if (!deviation) {
+                alert('Please select a deviation');
+                return;
+            }
+
+            // Get selected traits (only non-empty ones)
+            const selectedTraitsList = selectedTraits.filter(t => t);
+
+            // Add item to order
+            const orderItem = {
+                name: name,
+                deviation: deviation,
+                traits: selectedTraitsList,
+                notes: notes
+            };
+
+            orderItems.push(orderItem);
+            updateOrderItemsList();
+            clearForm();
+        }
+
+        function updateOrderItemsList() {
+            const itemsList = document.getElementById('orderItemsList');
+            
+            if (orderItems.length === 0) {
+                itemsList.innerHTML = '<div class="no-items"><p>No items added yet. Select a deviation and click "Add to Order"</p></div>';
+                return;
+            }
+
+            itemsList.innerHTML = orderItems.map((item, idx) => `
+                <div class="order-item">
+                    <span>
+                        <strong>${item.deviation}</strong>
+                        ${item.traits.length > 0 ? ` - ${item.traits.join(', ')}` : ' - (No traits)'}
+                        ${item.notes ? `<br><small style="color: var(--muted);">Notes: ${item.notes}</small>` : ''}
+                    </span>
+                    <button onclick="removeOrderItem(${idx})">Remove</button>
+                </div>
+            `).join('');
+        }
+
+        function removeOrderItem(index) {
+            orderItems.splice(index, 1);
+            updateOrderItemsList();
+        }
+
+        function generateReceipt() {
+            if (orderItems.length === 0) {
+                alert('Please add at least one item to your order');
+                return;
+            }
+
+            const receiptNum = 'ORD-' + Date.now();
+            const date = new Date().toLocaleString();
+
+            document.getElementById('receiptNumber').textContent = receiptNum;
+            document.getElementById('receiptCustomer').textContent = orderItems[0].name;
+            document.getElementById('receiptDate').textContent = date;
+
+            // Populate order items in receipt
+            const itemsList = document.getElementById('receipt-items-list');
+            itemsList.innerHTML = orderItems.map((item, idx) => `
+                <li class="receipt-item" style="flex-direction: column; align-items: flex-start; border: none; border-top: 1px dotted rgba(0, 255, 255, 0.2); padding: 0.75rem 0; margin: 0.5rem 0;">
+                    <strong style="color: var(--accent); margin-bottom: 0.3rem;">Item ${idx + 1}: ${item.deviation}</strong>
+                    ${item.traits.length > 0 ? `<span style="color: var(--text); margin-left: 1rem; font-size: 0.9rem;">Traits: ${item.traits.join(', ')}</span>` : ''}
+                    ${item.notes ? `<span style="color: var(--muted); margin-left: 1rem; font-size: 0.85rem; font-style: italic;">Notes: ${item.notes}</span>` : ''}
+                </li>
+            `).join('');
+
+            // Show receipt
+            document.getElementById('receipt').classList.add('active');
+            document.getElementById('noReceipt').style.display = 'none';
+        }
+
+        function clearForm() {
+            document.getElementById('orderNotes').value = '';
+            selectedTraits = ['', '', '', '', ''];
+            
+            for (let i = 0; i < 5; i++) {
+                const select = document.getElementById(`trait${i}`);
+                if (select) select.value = '';
+            }
+        }
+
+        function clearAllOrder() {
+            if (orderItems.length === 0) {
+                alert('No items to clear');
+                return;
+            }
+            if (confirm('Are you sure you want to clear all items?')) {
+                orderItems = [];
+                updateOrderItemsList();
+                document.getElementById('receipt').classList.remove('active');
+                document.getElementById('noReceipt').style.display = 'block';
+            }
+        }
+
+        function copyReceipt() {
+            const receiptNum = document.getElementById('receiptNumber').textContent;
+            const customerName = document.getElementById('receiptCustomer').textContent;
+            const date = document.getElementById('receiptDate').textContent;
+            
+            // Build receipt text
+            let receiptText = '═══ ORDER RECEIPT ═══\n';
+            receiptText += `Order #${receiptNum}\n\n`;
+            receiptText += `Customer: ${customerName}\n`;
+            receiptText += `Date: ${date}\n\n`;
+            receiptText += 'ORDER ITEMS:\n';
+            receiptText += '───────────────────────\n';
+            
+            // Get each order item
+            orderItems.forEach((item, idx) => {
+                receiptText += `Item ${idx + 1}: ${item.deviation}\n`;
+                if (item.traits.length > 0) {
+                    receiptText += `Traits: ${item.traits.join(', ')}\n`;
+                }
+                if (item.notes) {
+                    receiptText += `Notes: ${item.notes}\n`;
+                }
+                receiptText += '\n';
+            });
+            
+            receiptText += '───────────────────────\n';
+            receiptText += 'Status: PENDING\n\n';
+            receiptText += 'Thank you for your order!\n';
+            receiptText += 'Please save this receipt for your records.\n';
+            receiptText += '═════════════════════════';
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(receiptText).then(() => {
+                // Show feedback
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✓ Copied!';
+                btn.style.background = 'var(--primary)';
+                btn.style.borderColor = 'var(--primary)';
+                btn.style.color = 'var(--bg)';
+                
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = 'var(--accent)';
+                    btn.style.borderColor = 'var(--accent)';
+                    btn.style.color = 'var(--bg)';
+                }, 2000);
+            }).catch(err => {
+                alert('Failed to copy receipt. Please try again.');
+                console.error('Copy error:', err);
+            });
+        }
+    </script>
+</body>
+</html>

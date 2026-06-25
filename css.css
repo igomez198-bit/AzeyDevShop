@@ -1,0 +1,314 @@
+/* ==========================================================================
+   1. GLOBAL STYLES & VARIABLES
+   ========================================================================== */
+:root {
+    --primary: #00ffff;
+    --primary-dark: #00d9ff;
+    --secondary: #ff006e;
+    --accent: #ffbe0b;
+    --bg: #0a0e27;
+    --bg-secondary: #1a1f3a;
+    --bg-card: #151b34;
+    --text: #e0f7ff;
+    --text-main: #e0f7ff;
+    --text-muted: #88d9ff;
+    --border: rgba(0, 255, 255, 0.3);
+    --border-color: #00ffff;
+    --shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+    --glow: rgba(0, 255, 255, 0.4);
+    --accent-neon: #00ffff;
+    --accent-purple: #ff006e;
+    --font-stack: 'Inter', 'Courier New', system-ui, monospace;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg);
+    color: var(--text);
+    font-family: var(--font-stack);
+    line-height: 1.6;
+    padding: 20px;
+    position: relative;
+    overflow-x: hidden;
+}
+
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(0, 255, 255, 0.03) 0px,
+        rgba(0, 255, 255, 0.03) 2px,
+        transparent 2px,
+        transparent 4px
+    );
+    pointer-events: none;
+    z-index: 1;
+}
+
+main, section, header, nav {
+    position: relative;
+    z-index: 2;
+}
+
+/* ==========================================================================
+   2. HEADER & NAVIGATION
+   ========================================================================== */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 40px;
+}
+
+/* Navigation Links */
+nav a, .cart-status {
+    color: var(--text-main);
+    text-decoration: none;
+    font-weight: 500;
+    margin-left: 20px;
+    transition: color 0.3s ease;
+}
+
+nav a:hover {
+    color: var(--accent-neon);
+}
+
+/* Brand styling */
+header h2, header h1 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--primary);
+    text-shadow: 0 0 10px var(--primary), 0 0 20px rgba(0, 255, 255, 0.5);
+}
+
+/* ==========================================================================
+   3. HERO HERO BANNER SECTION
+   ========================================================================== */
+main > h1 {
+    font-size: 2.8rem;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+main > p {
+    color: var(--text-muted);
+    font-size: 1.15rem;
+    max-width: 600px;
+    margin: 0 auto 30px auto;
+    text-align: center;
+    line-height: 1.6;
+}
+
+/* Jump to Listings Button / Hero Links */
+a[href*="Listings"], a[href*="Deviations"] {
+    display: inline-block;
+    background: var(--primary);
+    color: var(--bg);
+    padding: 12px 24px;
+    border-radius: 0;
+    text-decoration: none;
+    font-weight: 700;
+    margin: 10px auto 40px auto;
+    display: table;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    transition: all 0.2s;
+    box-shadow: 0 0 15px var(--primary), inset 0 0 20px rgba(0, 255, 255, 0.2);
+    border: 2px solid var(--primary);
+}
+
+a[href*="Listings"]:hover, a[href*="Deviations"]:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 0 0 25px var(--primary), 0 10px 30px rgba(0, 255, 255, 0.5), inset 0 0 20px rgba(0, 255, 255, 0.3);
+    background: rgba(0, 255, 255, 0.9);
+}
+
+/* ==========================================================================
+   4. PRODUCT GRID & BENTO CARDS
+   ========================================================================== */
+h2 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    border-left: 4px solid var(--accent-neon);
+    padding-left: 10px;
+    font-weight: 700;
+}
+
+/* Container for listing cards */
+.listings-container, main {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+    margin-bottom: 5px;
+}
+
+/* Force headings and descriptions out of the grid layout if needed */
+main > h1, main > p, main > h2, footer, header {
+    grid-column: 1 / -1;
+}
+
+/* Card Styling */
+.product-card, main > div {
+    background-color: var(--card-bg);
+    border: 2px solid var(--border-color);
+    border-radius: 0;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.3s;
+    box-shadow: 0 0 15px rgba(0, 255, 255, 0.2), inset 0 0 10px rgba(0, 255, 255, 0.1);
+    position: relative;
+}
+
+.product-card::before, main > div::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--primary), transparent);
+    animation: scanline 3s ease-in-out infinite;
+}
+
+@keyframes scanline {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+}
+
+.product-card:hover, main > div:hover {
+    transform: translate(-2px, -2px);
+    border-color: var(--secondary);
+    box-shadow: 0 0 30px rgba(0, 255, 255, 0.4), 0 0 15px rgba(255, 0, 110, 0.2), inset 0 0 15px rgba(0, 255, 255, 0.15);
+}
+
+/* Image Placeholder Style (Deviation Pic) */
+.product-card img, main > div > text, .deviation-pic {
+    background: linear-gradient(135deg, #1e293b, #0f172a);
+    height: 160px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin-bottom: 15px;
+    border: 1px dashed var(--border-color);
+}
+
+.product-card h3, main > div h3 {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    text-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+    font-weight: 700;
+}
+
+.product-card p, main > div p {
+    color: var(--text-muted);
+    font-size: 1.05rem;
+    margin-bottom: 15px;
+    flex-grow: 1;
+    line-height: 1.5;
+}
+
+/* Bullet technical details lists */
+ul {
+    list-style: none;
+    margin-bottom: 20px;
+    background: rgba(0, 0, 0, 0.2);
+    padding: 12px;
+    border-radius: 6px;
+    font-size: 1rem;
+}
+
+ul li {
+    font-size: 0.95rem;
+    color: var(--text);
+    margin-bottom: 8px;
+    font-weight: 500;
+    line-height: 1.4;
+}
+
+ul li::before {
+    content: "▶ ";
+    color: var(--primary);
+    font-weight: bold;
+    text-shadow: 0 0 5px var(--primary);
+}
+
+/* Price presentation */
+.price, main > div > strong, main > div > p + strong {
+    font-size: 1.5rem;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 15px;
+    display: block;
+    text-shadow: 0 0 8px rgba(255, 190, 11, 0.6);
+}
+
+/* Buttons (Add to Cart / Subscribe) */
+button {
+    background-color: transparent;
+    color: var(--accent-neon);
+    border: 2px solid var(--accent-neon);
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: all 0.2s ease;
+}
+
+button:hover {
+    background-color: var(--accent-neon);
+    color: var(--bg-main);
+    box-shadow: 0 0 15px rgba(0, 255, 204, 0.4);
+}
+
+/* ==========================================================================
+   5. INTERACTIVE CART & FOOTER SIDEBAR
+   ========================================================================== */
+#cart, .cart-container {
+    background-color: var(--bg-card);
+    border: 2px solid var(--accent-purple);
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 40px;
+}
+
+/* Total price display styling */
+#cart p strong, .cart-total {
+    font-size: 1.2rem;
+    color: white;
+}
+
+/* Footer layout */
+footer {
+    margin-top: 60px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    text-align: center;
+}
