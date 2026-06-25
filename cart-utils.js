@@ -8,9 +8,11 @@ window.DeviationCart = {
     CURRENCY: 'PHP',
 
     get products() {
-        const liveProducts = Array.isArray(window.PRODUCTS) && window.PRODUCTS.length ? window.PRODUCTS : null;
+        const liveProducts = Array.isArray(window.PRODUCTS) ? window.PRODUCTS : null;
+        const liveReady = window.PRODUCTS_LOADED === true;
         const stored = this.loadInventory();
-        if (Array.isArray(liveProducts)) return liveProducts;
+        if (liveReady) return liveProducts || [];
+        if (Array.isArray(liveProducts) && liveProducts.length) return liveProducts;
         return Array.isArray(stored) && stored.length ? stored : [];
     },
 
@@ -35,10 +37,18 @@ window.DeviationCart = {
     },
 
     syncInventory() {
-        const liveProducts = Array.isArray(window.PRODUCTS) && window.PRODUCTS.length ? window.PRODUCTS : null;
+        const liveProducts = Array.isArray(window.PRODUCTS) ? window.PRODUCTS : null;
+        const liveReady = window.PRODUCTS_LOADED === true;
         const stored = this.loadInventory();
-        const products = liveProducts || (Array.isArray(stored) && stored.length ? stored : []);
-        if (Array.isArray(products) && products.length) {
+        let products = [];
+
+        if (liveReady) {
+            products = liveProducts || [];
+        } else {
+            products = liveProducts && liveProducts.length ? liveProducts : (Array.isArray(stored) && stored.length ? stored : []);
+        }
+
+        if (Array.isArray(products)) {
             window.PRODUCTS = products;
             this.saveInventory(products);
             return products;

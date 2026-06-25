@@ -21,9 +21,24 @@ const auth = getAuth(app);
 // Auto sign-in anonymously so write operations work if rules allow
 signInAnonymously(auth).catch(()=>{});
 
+const productUpdateChannel = typeof BroadcastChannel !== 'undefined'
+  ? new BroadcastChannel('deviation-products')
+  : null;
+
 function objToArray(obj) {
   if (!obj) return [];
-  return Object.keys(obj).map(k => ({ ...(obj[k] || {}), id: Number(k) })).sort((a,b)=>a.id-b.id);
+  return Object.keys(obj)
+    .map(k => ({ ...(obj[k] || {}), id: Number(k) }))
+    .sort((a, b) => a.id - b.id);
+}
+
+window.PRODUCTS_LOADED = false;
+
+function dispatchProductUpdate() {
+  window.dispatchEvent(new Event('firebase-products-updated'));
+  if (productUpdateChannel) {
+    productUpdateChannel.postMessage({ type: 'products-updated' });
+  }
 }
 
 async function fetchProductsOnce() {
@@ -31,11 +46,10 @@ async function fetchProductsOnce() {
     const snapshot = await get(ref(db, 'products'));
     const val = snapshot.exists() ? snapshot.val() : null;
     const arr = objToArray(val);
-    // keep local storage in sync
     try { localStorage.setItem('deviation_inventory_v1', JSON.stringify(arr)); } catch (e) {}
     window.PRODUCTS = arr;
-    // notify pages
-    window.dispatchEvent(new Event('storage'));
+    window.PRODUCTS_LOADED = true;
+    dispatchProductUpdate();
     return arr;
   } catch (e) {
     return null;
@@ -49,7 +63,8 @@ function subscribeProducts(onChange) {
     const arr = objToArray(val);
     try { localStorage.setItem('deviation_inventory_v1', JSON.stringify(arr)); } catch (e) {}
     window.PRODUCTS = arr;
-    window.dispatchEvent(new Event('storage'));
+    window.PRODUCTS_LOADED = true;
+    dispatchProductUpdate();
     if (typeof onChange === 'function') onChange(arr);
   });
 }
@@ -63,7 +78,12 @@ async function setProductsArray(products) {
       obj[id].id = undefined;
     });
     await set(ref(db, 'products'), obj);
-    return { ok: true, count: (products || []).length };
+    const arr = (products || []).map(p => ({ ...p }));
+    window.PRODUCTS = arr;
+    window.PRODUCTS_LOADED = true;
+    try { localStorage.setItem('deviation_inventory_v1', JSON.stringify(arr)); } catch (e) {}
+    dispatchProductUpdate();
+    return { ok: true, count: arr.length };
   } catch (e) {
     return { error: e.message };
   }
@@ -71,25 +91,26 @@ async function setProductsArray(products) {
 
 async function addProduct(product) {
   try {
-    // fetch current products to compute next id
     const snapshot = await get(ref(db, 'products'));
     const val = snapshot.exists() ? snapshot.val() : {};
-    const keys = Object.keys(val || {}).map(k=>Number(k)).filter(Boolean);
-    const nextId = keys.length ? Math.max(...keys)+1 : 1;
+    const keys = Object.keys(val || {}).map(k => Number(k)).filter(Boolean);
+    const nextId = keys.length ? Math.max(...keys) + 1 : 1;
     const data = { ...product };
     delete data.id;
     await update(ref(db, `products/${nextId}`), data);
+    dispatchProductUpdate();
     return { ok: true, id: nextId };
   } catch (e) {
     return { error: e.message };
   }
 }
 
-async function deleteProduct(id){
-  try{
+async function deleteProduct(id) {
+  try {
     await remove(ref(db, `products/${id}`));
+    dispatchProductUpdate();
     return { ok: true };
-  }catch(e){
+  } catch (e) {
     return { error: e.message };
   }
 }

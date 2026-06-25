@@ -725,6 +725,21 @@
             renderFeaturedProducts();
             renderCart();
         });
+
+        window.addEventListener('firebase-products-updated', () => {
+            DeviationCart.syncInventory();
+            renderFeaturedProducts();
+            renderCart();
+        });
+
+        if (typeof BroadcastChannel !== 'undefined') {
+            const channel = new BroadcastChannel('deviation-products');
+            channel.addEventListener('message', () => {
+                DeviationCart.syncInventory();
+                renderFeaturedProducts();
+                renderCart();
+            });
+        }
     });
     </script>
 </body>
