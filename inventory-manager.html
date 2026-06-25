@@ -195,6 +195,25 @@
         button.success {
             background: var(--success);
             color: #0f172a;
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button.success.loading::before {
+            content: '';
+            width: 1rem;
+            height: 1rem;
+            border: 2px solid rgba(15, 23, 42, 0.25);
+            border-top-color: rgba(15, 23, 42, 0.8);
+            border-radius: 50%;
+            margin-right: 0.5rem;
+            animation: spin 0.85s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
 
         button.danger {
@@ -590,6 +609,8 @@
 
         let rows = [];
         let inventorySearchTerm = '';
+        const changedProductIds = new Set();
+        const deletedProductIds = new Set();
 
         const authScreen = document.getElementById('auth-screen');
         const inventorySearchInput = document.getElementById('inventory-search');
@@ -754,6 +775,8 @@
                 rows = data.map(normalizeRow);
                 saveLocalInventory();
                 renderTable();
+                resetChangeTracking();
+                setSaveButtonEnabled(false);
                 setStatus(`Firebase inventory updated (${rows.length} items).`);
             });
         }
@@ -774,6 +797,8 @@
             rows = data.map(normalizeRow);
             saveLocalInventory();
             renderTable();
+            resetChangeTracking();
+            setSaveButtonEnabled(false);
             setStatus(`Firebase inventory loaded. ${rows.length} items are ready to edit.`);
             return true;
         }
@@ -800,12 +825,31 @@
             }
         }
 
-        function setSaveButtonEnabled(enabled) {
+        function markRowChanged(id) {
+            if (!id) return;
+            deletedProductIds.delete(id);
+            changedProductIds.add(id);
+        }
+
+        function markRowDeleted(id) {
+            if (!id) return;
+            changedProductIds.delete(id);
+            deletedProductIds.add(id);
+        }
+
+        function resetChangeTracking() {
+            changedProductIds.clear();
+            deletedProductIds.clear();
+        }
+
+        function setSaveButtonEnabled(enabled, label = 'Save changes') {
             const saveBtn = document.getElementById('save-firebase');
             if (!saveBtn) return;
             saveBtn.disabled = !enabled;
+            saveBtn.textContent = label;
             saveBtn.style.opacity = enabled ? '1' : '0.65';
             saveBtn.style.cursor = enabled ? 'pointer' : 'not-allowed';
+            saveBtn.classList.toggle('loading', label.toLowerCase().includes('saving'));
         }
 
         function escapeAttr(value) {
@@ -999,6 +1043,7 @@
             if (field === 'stock') {
                 rows[index].status = rows[index].stock <= 0 ? 'Out of Stock' : 'In Stock';
             }
+            markRowChanged(rows[index].id);
             if (field === 'image') {
                 renderTable();
             }
@@ -1020,7 +1065,9 @@
             const reader = new FileReader();
             reader.onload = () => {
                 rows[index].image = String(reader.result || '');
+                markRowChanged(rows[index].id);
                 renderTable();
+                saveLocalInventory();
                 setSaveButtonEnabled(true);
                 setStatus(`Image added for ${rows[index].name || 'item #' + rows[index].id}.`);
             };
@@ -1033,8 +1080,10 @@
                 const index = Number(clearBtn.dataset.clearImage);
                 if (rows[index]) {
                     rows[index].image = '';
+                    markRowChanged(rows[index].id);
                     renderTable();
                     saveLocalInventory();
+                    setSaveButtonEnabled(true);
                     setStatus('Image cleared.');
                 }
                 return;
@@ -1048,6 +1097,7 @@
                     rows[index].stock = Math.max(0, rows[index].stock - 1);
                     rows[index].sold = (rows[index].sold || 0) + 1;
                     rows[index].status = rows[index].stock <= 0 ? 'Out of Stock' : rows[index].status;
+                    markRowChanged(rows[index].id);
                     renderTable();
                     saveLocalInventory();
                     setSaveButtonEnabled(true);
@@ -1076,7 +1126,9 @@
             const id = Number(button.dataset.removeId);
             const index = rows.findIndex(item => Number(item.id) === id);
             if (index >= 0) {
+                const rowId = rows[index].id;
                 rows.splice(index, 1);
+                markRowDeleted(rowId);
                 renderTable();
                 saveLocalInventory();
                 setSaveButtonEnabled(true);
@@ -1091,7 +1143,7 @@
         logoutBtn.addEventListener('click', lockSheet);
 
         document.getElementById('add-row').addEventListener('click', () => {
-            rows.unshift(normalizeRow({
+            const row = normalizeRow({
                 id: nextId(),
                 image: '',
                 name: 'New Deviation',
@@ -1104,7 +1156,9 @@
                 price: 100,
                 status: 'In Stock',
                 sold: 0
-            }));
+            });
+            rows.unshift(row);
+            markRowChanged(row.id);
             saveLocalInventory();
             renderTable();
             setSaveButtonEnabled(true);
@@ -1114,17 +1168,41 @@
         document.getElementById('save-firebase').addEventListener('click', async () => {
             syncFromInputs();
             saveLocalInventory();
-            if (!window.FirebaseClient || !window.FirebaseClient.setProductsArray) {
+            if (!window.FirebaseClient) {
                 setStatus('Firebase client not available.');
                 return;
             }
-            setStatus('Saving changes to Firebase...');
-            const res = await window.FirebaseClient.setProductsArray(rows);
-            if (res && res.ok) {
-                setStatus(`Saved ${res.count} items to Firebase.`);
+            const changedIds = Array.from(changedProductIds);
+            const deletedIds = Array.from(deletedProductIds);
+            if (!changedIds.length && !deletedIds.length) {
+                setStatus('No inventory changes to save.');
                 setSaveButtonEnabled(false);
+                return;
+            }
+            setStatus('Saving changes to Firebase...');
+            setSaveButtonEnabled(false, 'Saving...');
+            const results = [];
+            for (const id of deletedIds) {
+                if (typeof window.FirebaseClient.deleteProduct === 'function') {
+                    results.push(window.FirebaseClient.deleteProduct(id));
+                }
+            }
+            for (const id of changedIds) {
+                const row = rows.find(item => Number(item.id) === Number(id));
+                if (row && typeof window.FirebaseClient.updateProduct === 'function') {
+                    results.push(window.FirebaseClient.updateProduct(row));
+                }
+            }
+            const settled = await Promise.all(results);
+            const failed = settled.filter(r => !r || !r.ok);
+            if (!failed.length) {
+                resetChangeTracking();
+                setStatus(`Saved ${changedIds.length} updates and ${deletedIds.length} deletions to Firebase.`);
+                setSaveButtonEnabled(false, 'Save changes');
             } else {
-                setStatus('Firebase save failed: ' + (res && res.error ? res.error : 'unknown'));
+                const errors = failed.map(r => r && r.error ? r.error : 'unknown').join('; ');
+                setStatus(`Firebase save partially failed: ${errors}`);
+                setSaveButtonEnabled(true, 'Save changes');
             }
         });
 
@@ -1139,6 +1217,7 @@
                 rows = data.map(normalizeRow);
                 saveLocalInventory();
                 renderTable();
+                resetChangeTracking();
                 setSaveButtonEnabled(false);
                 setStatus(`Refreshed ${rows.length} items from Firebase. Edit fields to enable Save changes.`);
             } else {

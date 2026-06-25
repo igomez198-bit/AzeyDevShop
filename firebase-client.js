@@ -120,6 +120,28 @@ async function restSetProductsArray(products) {
   }
 }
 
+async function restUpdateProduct(product) {
+  try {
+    const id = Number(product.id);
+    if (!id) throw new Error('Invalid product id');
+    const { id: _removeId, ...payload } = product;
+    const response = await fetch(`${DATABASE_REST_URL}/products/${id}.json`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`REST update failed: ${response.status} ${text}`);
+    }
+    return { ok: true, id };
+  } catch (error) {
+    const errorMessage = error?.message || String(error);
+    console.error('Firebase REST updateProduct failed:', errorMessage, { product });
+    return { error: errorMessage };
+  }
+}
+
 function dispatchProductUpdate() {
   window.dispatchEvent(new Event('firebase-products-updated'));
   if (productUpdateChannel) {
@@ -198,6 +220,38 @@ async function setProductsArray(products) {
   }
 }
 
+async function updateProduct(product) {
+  try {
+    await waitForAuthReady();
+    if (!window.FIREBASE_AUTH_USER) {
+      console.warn('Firebase write proceeding without auth user; database rules must allow unauthenticated writes.');
+    }
+    const id = Number(product.id);
+    if (!id) {
+      throw new Error('Invalid product id for update');
+    }
+    const { id: _removeId, ...payload } = product;
+    await update(ref(db, `products/${id}`), payload);
+    const arr = Array.isArray(window.PRODUCTS) ? window.PRODUCTS.map(p => ({ ...p })) : [];
+    window.PRODUCTS = arr;
+    window.PRODUCTS_LOADED = true;
+    try { localStorage.setItem('deviation_inventory_v1', JSON.stringify(arr)); } catch (e) {}
+    dispatchProductUpdate();
+    return { ok: true, id };
+  } catch (e) {
+    console.warn('Firebase SDK update failed, trying REST fallback:', e);
+    const restRes = await restUpdateProduct(product);
+    if (restRes && restRes.ok) {
+      try { localStorage.setItem('deviation_inventory_v1', JSON.stringify(window.PRODUCTS || [])); } catch (e) {}
+      dispatchProductUpdate();
+      return restRes;
+    }
+    const errorMessage = restRes?.error || e?.message || String(e);
+    console.error('Firebase updateProduct failed:', errorMessage, { product });
+    return { error: errorMessage };
+  }
+}
+
 async function addProduct(product) {
   try {
     await waitForAuthReady();
@@ -231,7 +285,7 @@ async function deleteProduct(id) {
   }
 }
 
-window.FirebaseClient = { fetchProductsOnce, subscribeProducts, setProductsArray, addProduct, deleteProduct };
+window.FirebaseClient = { fetchProductsOnce, subscribeProducts, setProductsArray, updateProduct, addProduct, deleteProduct };
 
 // Auto-subscribe to keep clients in sync
 subscribeProducts();
