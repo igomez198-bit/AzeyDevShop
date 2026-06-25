@@ -464,11 +464,30 @@
             bindFirebaseUpdatesToTable();
             setSaveButtonEnabled(false);
             setStatus('Loading inventory...');
-            const ok = await updateRowsFromFirebase();
-            if (!ok) {
-                setStatus('Unable to load from Firebase yet. Edit local data and click Save changes when ready.');
-                setSaveButtonEnabled(true);
+
+            if (window.FirebaseClient && window.FirebaseClient.fetchProductsOnce) {
+                const ok = await updateRowsFromFirebase();
+                if (!ok) {
+                    setStatus('Unable to load from Firebase yet. Edit local data and click Save changes when ready.');
+                    setSaveButtonEnabled(true);
+                }
+                return;
             }
+
+            setStatus('Waiting for Firebase client to become ready...');
+            const tryFetch = async () => {
+                if (window.FirebaseClient && window.FirebaseClient.fetchProductsOnce) {
+                    const ok = await updateRowsFromFirebase();
+                    if (!ok) {
+                        setStatus('Unable to load from Firebase yet. Edit local data and click Save changes when ready.');
+                        setSaveButtonEnabled(true);
+                    }
+                }
+            };
+
+            window.addEventListener('firebase-products-updated', tryFetch, { once: true });
+            window.addEventListener('storage', tryFetch, { once: true });
+            setTimeout(tryFetch, 1500);
         }
 
         async function unlockSheet() {
