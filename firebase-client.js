@@ -142,6 +142,110 @@ async function restUpdateProduct(product) {
   }
 }
 
+async function restBatchUpdateProducts(changedProducts = [], deletedIds = []) {
+  try {
+    const updates = {};
+    (changedProducts || []).forEach(product => {
+      const id = Number(product.id);
+      if (!id) return;
+      const { id: _removeId, ...payload } = product;
+      updates[id] = payload;
+    });
+    (deletedIds || []).forEach(id => {
+      const productId = Number(id);
+      if (!productId) return;
+      updates[productId] = null;
+    });
+    const response = await fetch(`${DATABASE_REST_URL}/products.json`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates)
+    });
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`REST batch update failed: ${response.status} ${text}`);
+    }
+    return { ok: true, count: Object.keys(updates).length };
+  } catch (error) {
+    const errorMessage = error?.message || String(error);
+    console.error('Firebase REST batch update failed:', errorMessage, { changedProducts, deletedIds });
+    return { error: errorMessage };
+  }
+}
+
+async function batchUpdateProducts(changedProducts = [], deletedIds = []) {
+  try {
+    await waitForAuthReady();
+    if (!window.FIREBASE_AUTH_USER) {
+      console.warn('Firebase write proceeding without auth user; database rules must allow unauthenticated writes.');
+    }
+    const updates = {};
+    (changedProducts || []).forEach(product => {
+      const id = Number(product.id);
+      if (!id) return;
+      const { id: _removeId, ...payload } = product;
+      updates[`products/${id}`] = payload;
+    });
+    (deletedIds || []).forEach(id => {
+      const productId = Number(id);
+      if (!productId) return;
+      updates[`products/${productId}`] = null;
+    });
+    if (!Object.keys(updates).length) {
+      return { ok: true, count: 0 };
+    }
+    await update(ref(db), updates);
+    const deletedSet = new Set((deletedIds || []).map(id => Number(id)).filter(Boolean));
+    const currentProducts = Array.isArray(window.PRODUCTS) ? window.PRODUCTS.slice() : [];
+    const mergedProducts = currentProducts
+      .filter(product => !deletedSet.has(Number(product.id)))
+      .map(product => ({ ...product }));
+    (changedProducts || []).forEach(product => {
+      const id = Number(product.id);
+      if (!id) return;
+      const index = mergedProducts.findIndex(item => Number(item.id) === id);
+      if (index >= 0) {
+        mergedProducts[index] = { ...product };
+      } else {
+        mergedProducts.push({ ...product });
+      }
+    });
+    window.PRODUCTS = mergedProducts;
+    window.PRODUCTS_LOADED = true;
+    try { localStorage.setItem('deviation_inventory_v1', JSON.stringify(mergedProducts)); } catch (e) {}
+    dispatchProductUpdate();
+    return { ok: true, count: Object.keys(updates).length };
+  } catch (e) {
+    console.warn('Firebase SDK batch update failed, trying REST fallback:', e);
+    const restRes = await restBatchUpdateProducts(changedProducts, deletedIds);
+    if (restRes && restRes.ok) {
+      const deletedSet = new Set((deletedIds || []).map(id => Number(id)).filter(Boolean));
+      const currentProducts = Array.isArray(window.PRODUCTS) ? window.PRODUCTS.slice() : [];
+      const mergedProducts = currentProducts
+        .filter(product => !deletedSet.has(Number(product.id)))
+        .map(product => ({ ...product }));
+      (changedProducts || []).forEach(product => {
+        const id = Number(product.id);
+        if (!id) return;
+        const index = mergedProducts.findIndex(item => Number(item.id) === id);
+        if (index >= 0) {
+          mergedProducts[index] = { ...product };
+        } else {
+          mergedProducts.push({ ...product });
+        }
+      });
+      window.PRODUCTS = mergedProducts;
+      window.PRODUCTS_LOADED = true;
+      try { localStorage.setItem('deviation_inventory_v1', JSON.stringify(mergedProducts)); } catch (e) {}
+      dispatchProductUpdate();
+      return restRes;
+    }
+    const errorMessage = restRes?.error || e?.message || String(e);
+    console.error('Firebase batchUpdateProducts failed:', errorMessage, { changedProducts, deletedIds });
+    return { error: errorMessage };
+  }
+}
+
 function dispatchProductUpdate() {
   window.dispatchEvent(new Event('firebase-products-updated'));
   if (productUpdateChannel) {
@@ -285,7 +389,7 @@ async function deleteProduct(id) {
   }
 }
 
-window.FirebaseClient = { fetchProductsOnce, subscribeProducts, setProductsArray, updateProduct, addProduct, deleteProduct };
+window.FirebaseClient = { fetchProductsOnce, subscribeProducts, setProductsArray, batchUpdateProducts, updateProduct, addProduct, deleteProduct };
 
 // Auto-subscribe to keep clients in sync
 subscribeProducts();
