@@ -472,6 +472,14 @@
             if (window.FirebaseClient && window.FirebaseClient.fetchProductsOnce) {
                 const ok = await updateRowsFromFirebase();
                 if (!ok) {
+                    if (!rows || !rows.length) {
+                        setStatus('Unable to load from Firebase yet. Restoring backup inventory.csv...');
+                        const restored = await restoreBackupCsvFile();
+                        if (restored) {
+                            setStatus(`Restored ${rows.length} rows from inventory.csv. Click Save changes to publish.`);
+                            return;
+                        }
+                    }
                     setStatus('Unable to load from Firebase yet. Edit local data and click Save changes when ready.');
                     setSaveButtonEnabled(true);
                 }
@@ -776,6 +784,23 @@
                 });
                 return normalizeRow(row);
             });
+        }
+
+        async function restoreBackupCsvFile() {
+            try {
+                const response = await fetch('./inventory.csv');
+                if (!response.ok) return false;
+                const text = await response.text();
+                const imported = parseCsv(text);
+                if (!Array.isArray(imported) || !imported.length) return false;
+                rows = imported;
+                saveLocalInventory();
+                renderTable();
+                setSaveButtonEnabled(true);
+                return true;
+            } catch (error) {
+                return false;
+            }
         }
 
         bodyEl.addEventListener('input', (event) => {
