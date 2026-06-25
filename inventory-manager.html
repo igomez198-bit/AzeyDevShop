@@ -499,6 +499,7 @@
             </div>
             <button type="button" id="add-row">+ Add Item</button>
             <button type="button" class="secondary" id="load-firebase">Refresh</button>
+            <button type="button" class="secondary" id="convert-images">Convert images</button>
             <button type="button" class="success" id="save-firebase" disabled>Save changes</button>
         </div>
 
@@ -898,6 +899,109 @@
                 reader.readAsDataURL(file);
             });
         }
+
+        // Resize an image from a URL to a data URL (handles remote or relative paths)
+        async function resizeImageFromUrl(url, maxWidth = 800, maxHeight = 800, quality = 0.8) {
+            try {
+                const resp = await fetch(url, { mode: 'cors' });
+                if (!resp.ok) throw new Error('Fetch failed: ' + resp.status);
+                const blob = await resp.blob();
+                const imgUrl = URL.createObjectURL(blob);
+                const img = new Image();
+                img.crossOrigin = 'Anonymous';
+                const loaded = await new Promise((resolve, reject) => {
+                    img.onload = () => resolve();
+                    img.onerror = (e) => reject(e);
+                    img.src = imgUrl;
+                });
+                URL.revokeObjectURL(imgUrl);
+                const w = img.width;
+                const h = img.height;
+                const ratio = Math.min(1, maxWidth / w, maxHeight / h);
+                const cw = Math.max(1, Math.round(w * ratio));
+                const ch = Math.max(1, Math.round(h * ratio));
+                const canvas = document.createElement('canvas');
+                canvas.width = cw;
+                canvas.height = ch;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, cw, ch);
+                try {
+                    return canvas.toDataURL('image/jpeg', quality);
+                } catch (e) {
+                    return canvas.toDataURL();
+                }
+            } catch (e) {
+                console.warn('resizeImageFromUrl failed for', url, e);
+                throw e;
+            }
+        }
+
+        // Convert existing non-data image URLs in rows to resized data-URLs and batch-save
+        document.getElementById('convert-images').addEventListener('click', async () => {
+            if (!Array.isArray(rows) || !rows.length) {
+                setStatus('No rows to process.');
+                return;
+            }
+            if (!window.FirebaseClient || typeof window.FirebaseClient.batchUpdateProducts !== 'function') {
+                setStatus('Firebase batch helper not available.');
+                return;
+            }
+            setStatus('Scanning images for conversion...');
+            const toConvert = [];
+            rows.forEach(r => {
+                const img = String(r.image || '').trim();
+                if (!img) return;
+                if (img.startsWith('data:')) return; // already data URL
+                toConvert.push({ id: r.id, url: img });
+            });
+            if (!toConvert.length) {
+                setStatus('No external images found to convert.');
+                return;
+            }
+            setStatus(`Converting ${toConvert.length} images...`);
+            const concurrency = 4;
+            let idx = 0;
+            const changed = [];
+            async function worker() {
+                while (idx < toConvert.length) {
+                    const i = idx++;
+                    const item = toConvert[i];
+                    try {
+                        const dataUrl = await resizeImageFromUrl(item.url, 800, 800, 0.8);
+                        const row = rows.find(r => Number(r.id) === Number(item.id));
+                        if (row) {
+                            row.image = dataUrl;
+                            markRowChanged(row.id);
+                            changed.push(row);
+                        }
+                        setStatus(`Converted ${Math.min(i+1, toConvert.length)}/${toConvert.length}`);
+                    } catch (e) {
+                        console.warn('Conversion failed for', item.url, e);
+                    }
+                }
+            }
+            const workers = [];
+            for (let i = 0; i < concurrency; i++) workers.push(worker());
+            await Promise.all(workers);
+            if (!changed.length) {
+                setStatus('No images converted successfully.');
+                return;
+            }
+            // Batch save changed rows
+            setStatus('Saving converted images to Firebase...');
+            setSaveButtonEnabled(false, 'Saving...');
+            const saveRes = await window.FirebaseClient.batchUpdateProducts(changed, []);
+            if (saveRes && saveRes.ok) {
+                saveLocalInventory();
+                renderTable();
+                resetChangeTracking();
+                setStatus(`Converted and saved ${changed.length} images.`);
+                setSaveButtonEnabled(false, 'Save changes');
+            } else {
+                setStatus(`Failed saving converted images: ${saveRes?.error || 'unknown'}`);
+                setSaveButtonEnabled(true, 'Save changes');
+            }
+        });
 
         function renderTable() {
             bodyEl.innerHTML = '';
