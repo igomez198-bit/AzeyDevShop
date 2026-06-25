@@ -113,10 +113,27 @@ window.DeviationCart = {
         const thumb = product && product.imageThumb ? String(product.imageThumb).trim() : '';
         const image = product && product.image ? String(product.image).trim() : '';
         const src = thumb || image;
-        if (src) {
-            return `<a href="${this.escapeHtml(image || src)}" class="${className} product-image-link" target="_blank" rel="noopener noreferrer"><img src="${this.escapeHtml(src)}" alt="${this.escapeHtml(product.name || 'Deviation')}"></a>`;
+        const resolvedSrc = this.resolveProductImageUrl(src);
+        const resolvedLink = this.resolveProductImageUrl(image || src);
+        if (resolvedSrc) {
+            return `<a href="${this.escapeHtml(resolvedLink)}" class="${className} product-image-link" target="_blank" rel="noopener noreferrer"><img src="${this.escapeHtml(resolvedSrc)}" alt="${this.escapeHtml(product.name || 'Deviation')}"></a>`;
         }
         return `<div class="${className} product-image-placeholder"><span class="product-image-placeholder">🖼️</span></div>`;
+    },
+
+    resolveProductImageUrl(value) {
+        const raw = String(value || '').trim();
+        if (!raw) return '';
+        if (raw.startsWith('data:')) return raw;
+        if (raw.startsWith('//')) return raw;
+        if (/^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(raw)) return raw;
+        if (raw.startsWith('images/') || raw.startsWith('./images/') || raw.startsWith('../images/') || raw.startsWith('/images/')) {
+            return raw;
+        }
+        if (raw.includes('/')) {
+            return raw;
+        }
+        return `images/${raw}`;
     },
 
     escapeHtml(value) {
