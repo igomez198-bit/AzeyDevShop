@@ -120,7 +120,7 @@ async function setProductsArray(products) {
   try {
     await waitForAuthReady();
     if (!window.FIREBASE_AUTH_USER) {
-      return { error: 'Authentication not established yet.' };
+      console.warn('Firebase write proceeding without auth user; database rules must allow unauthenticated writes.');
     }
     const obj = {};
     (products || []).forEach(p => {
@@ -146,7 +146,7 @@ async function addProduct(product) {
   try {
     await waitForAuthReady();
     if (!window.FIREBASE_AUTH_USER) {
-      return { error: 'Authentication not established yet.' };
+      console.warn('Firebase write proceeding without auth user; database rules must allow unauthenticated writes.');
     }
     const snapshot = await get(ref(db, 'products'));
     const val = snapshot.exists() ? snapshot.val() : {};
@@ -162,10 +162,12 @@ async function addProduct(product) {
 }
 
 async function deleteProduct(id) {
-  try {    await waitForAuthReady();
+  try {
+    await waitForAuthReady();
     if (!window.FIREBASE_AUTH_USER) {
-      return { error: 'Authentication not established yet.' };
-    }    await remove(ref(db, `products/${id}`));
+      console.warn('Firebase write proceeding without auth user; database rules must allow unauthenticated writes.');
+    }
+    await remove(ref(db, `products/${id}`));
     dispatchProductUpdate();
     return { ok: true };
   } catch (e) {
