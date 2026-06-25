@@ -11,7 +11,17 @@ window.DeviationCart = {
         const liveProducts = Array.isArray(window.PRODUCTS) ? window.PRODUCTS : null;
         const liveReady = window.PRODUCTS_LOADED === true;
         const stored = this.loadInventory();
-        if (liveReady) return liveProducts || [];
+
+        if (liveReady) {
+            if (Array.isArray(liveProducts) && liveProducts.length) {
+                return liveProducts;
+            }
+            if (Array.isArray(stored) && stored.length) {
+                return stored;
+            }
+            return liveProducts || [];
+        }
+
         if (Array.isArray(liveProducts) && liveProducts.length) return liveProducts;
         return Array.isArray(stored) && stored.length ? stored : [];
     },
@@ -43,7 +53,13 @@ window.DeviationCart = {
         let products = [];
 
         if (liveReady) {
-            products = liveProducts || [];
+            if (Array.isArray(liveProducts) && liveProducts.length) {
+                products = liveProducts;
+            } else if (Array.isArray(stored) && stored.length) {
+                products = stored;
+            } else {
+                products = liveProducts || [];
+            }
         } else {
             products = liveProducts && liveProducts.length ? liveProducts : (Array.isArray(stored) && stored.length ? stored : []);
         }
