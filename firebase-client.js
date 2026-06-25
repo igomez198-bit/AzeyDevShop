@@ -20,14 +20,24 @@ const auth = getAuth(app);
 
 window.FIREBASE_AUTH_USER = null;
 window.FIREBASE_AUTH_READY = false;
+window.FIREBASE_AUTH_PROMISES = [];
+
+function resolveAuthReady() {
+  if (window.FIREBASE_AUTH_READY) return;
+  window.FIREBASE_AUTH_READY = true;
+  window.dispatchEvent(new Event('firebase-auth-ready'));
+  while (window.FIREBASE_AUTH_PROMISES.length) {
+    const next = window.FIREBASE_AUTH_PROMISES.shift();
+    next(window.FIREBASE_AUTH_USER);
+  }
+}
 
 onAuthStateChanged(auth, user => {
   window.FIREBASE_AUTH_USER = user;
-  window.FIREBASE_AUTH_READY = true;
-  window.dispatchEvent(new Event('firebase-auth-ready'));
   if (user) {
     console.log('Firebase anonymous sign-in successful:', user.uid);
-  } else {
+    resolveAuthReady();
+  } else if (window.FIREBASE_AUTH_READY) {
     console.warn('Firebase auth state changed: signed out');
   }
 });
@@ -37,26 +47,26 @@ function waitForAuthReady(timeoutMs = 5000) {
     return Promise.resolve(window.FIREBASE_AUTH_USER);
   }
   return new Promise(resolve => {
-    const timeout = setTimeout(() => {
-      window.removeEventListener('firebase-auth-ready', onAuthReady);
-      resolve(window.FIREBASE_AUTH_USER);
+    window.FIREBASE_AUTH_PROMISES.push(resolve);
+    setTimeout(() => {
+      if (!window.FIREBASE_AUTH_READY) {
+        console.warn('Firebase auth ready timeout, continuing with current auth state.');
+        resolveAuthReady();
+      }
     }, timeoutMs);
-
-    function onAuthReady() {
-      clearTimeout(timeout);
-      window.removeEventListener('firebase-auth-ready', onAuthReady);
-      resolve(window.FIREBASE_AUTH_USER);
-    }
-
-    window.addEventListener('firebase-auth-ready', onAuthReady);
   });
 }
 
 // Auto sign-in anonymously so write operations work if rules allow
-signInAnonymously(auth).catch(error => {
-  console.error('Firebase anonymous sign-in failed:', error);
-  window.dispatchEvent(new Event('firebase-auth-ready'));
-});
+signInAnonymously(auth)
+  .catch(error => {
+    console.error('Firebase anonymous sign-in failed:', error);
+  })
+  .finally(() => {
+    if (!window.FIREBASE_AUTH_READY) {
+      resolveAuthReady();
+    }
+  });
 
 const productUpdateChannel = typeof BroadcastChannel !== 'undefined'
   ? new BroadcastChannel('deviation-products')
