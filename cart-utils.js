@@ -110,9 +110,11 @@ window.DeviationCart = {
     },
 
     renderProductImage(product, className = 'deviation-pic') {
+        const thumb = product && product.imageThumb ? String(product.imageThumb).trim() : '';
         const image = product && product.image ? String(product.image).trim() : '';
-        if (image) {
-            return `<a href="${this.escapeHtml(image)}" class="${className} product-image-link" target="_blank" rel="noopener noreferrer"><img src="${this.escapeHtml(image)}" alt="${this.escapeHtml(product.name || 'Deviation')}"></a>`;
+        const src = thumb || image;
+        if (src) {
+            return `<a href="${this.escapeHtml(image || src)}" class="${className} product-image-link" target="_blank" rel="noopener noreferrer"><img src="${this.escapeHtml(src)}" alt="${this.escapeHtml(product.name || 'Deviation')}"></a>`;
         }
         return `<div class="${className} product-image-placeholder"><span class="product-image-placeholder">🖼️</span></div>`;
     },
