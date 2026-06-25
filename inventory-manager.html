@@ -507,7 +507,6 @@
             <table>
                 <thead>
                     <tr>
-                        <th>ID</th>
                         <th>Image</th>
                         <th>Name</th>
                         <th>Type</th>
@@ -838,7 +837,7 @@
             if (!filteredRows.length) {
                 bodyEl.innerHTML = `
                     <tr>
-                        <td colspan="13" style="padding:1.5rem;text-align:center;color:var(--muted);">No inventory items match your search.</td>
+                        <td colspan="12" style="padding:1.5rem;text-align:center;color:var(--muted);">No inventory items match your search.</td>
                     </tr>
                 `;
                 updateInventoryStats();
@@ -847,7 +846,6 @@
             filteredRows.forEach(({ row, index }) => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><input type="number" min="1" value="${row.id}" data-field="id" data-index="${index}"></td>
                     <td class="image-cell">
                         ${imagePreviewHtml(row.image)}
                         <div class="image-actions">
