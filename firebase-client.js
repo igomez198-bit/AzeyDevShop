@@ -72,6 +72,8 @@ const productUpdateChannel = typeof BroadcastChannel !== 'undefined'
   ? new BroadcastChannel('deviation-products')
   : null;
 
+const DATABASE_REST_URL = 'https://devi-e9064-default-rtdb.asia-southeast1.firebasedatabase.app';
+
 function objToArray(obj) {
   if (!obj) return [];
   return Object.keys(obj)
@@ -80,6 +82,43 @@ function objToArray(obj) {
 }
 
 window.PRODUCTS_LOADED = false;
+
+async function restFetchProductsOnce() {
+  try {
+    const response = await fetch(`${DATABASE_REST_URL}/products.json`);
+    if (!response.ok) return null;
+    const val = await response.json();
+    return objToArray(val);
+  } catch (error) {
+    console.warn('Firebase REST fetch failed:', error);
+    return null;
+  }
+}
+
+async function restSetProductsArray(products) {
+  try {
+    const obj = {};
+    (products || []).forEach(p => {
+      const id = Number(p.id) || Date.now();
+      const { id: _removeId, ...payload } = p;
+      obj[id] = payload;
+    });
+    const response = await fetch(`${DATABASE_REST_URL}/products.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(obj)
+    });
+    if (!response.ok) {
+      const text = await response.text();
+      throw new Error(`REST write failed: ${response.status} ${text}`);
+    }
+    return { ok: true, count: (products || []).length };
+  } catch (error) {
+    const errorMessage = error?.message || String(error);
+    console.error('Firebase REST setProductsArray failed:', errorMessage);
+    return { error: errorMessage };
+  }
+}
 
 function dispatchProductUpdate() {
   window.dispatchEvent(new Event('firebase-products-updated'));
@@ -99,7 +138,14 @@ async function fetchProductsOnce() {
     dispatchProductUpdate();
     return arr;
   } catch (e) {
-    return null;
+    console.warn('Firebase SDK fetch failed, trying REST fallback:', e);
+    const arr = await restFetchProductsOnce();
+    if (!Array.isArray(arr)) return null;
+    try { localStorage.setItem('deviation_inventory_v1', JSON.stringify(arr)); } catch (e) {}
+    window.PRODUCTS = arr;
+    window.PRODUCTS_LOADED = true;
+    dispatchProductUpdate();
+    return arr;
   }
 }
 
@@ -136,7 +182,17 @@ async function setProductsArray(products) {
     dispatchProductUpdate();
     return { ok: true, count: arr.length };
   } catch (e) {
-    const errorMessage = e?.message || String(e);
+    console.warn('Firebase SDK write failed, trying REST fallback:', e);
+    const restRes = await restSetProductsArray(products);
+    if (restRes && restRes.ok) {
+      const arr = (products || []).map(p => ({ ...p }));
+      window.PRODUCTS = arr;
+      window.PRODUCTS_LOADED = true;
+      try { localStorage.setItem('deviation_inventory_v1', JSON.stringify(arr)); } catch (e) {}
+      dispatchProductUpdate();
+      return restRes;
+    }
+    const errorMessage = restRes?.error || e?.message || String(e);
     console.error('Firebase setProductsArray failed:', errorMessage, { products });
     return { error: errorMessage };
   }
