@@ -951,6 +951,15 @@
             });
         }
 
+        if (window.FirebaseClient && window.FirebaseClient.subscribeProducts) {
+            window.FirebaseClient.subscribeProducts(data => {
+                if (!Array.isArray(data)) return;
+                DeviationCart.syncInventory();
+                renderProducts();
+                renderCart();
+            });
+        }
+
         window.addEventListener('storage', () => {
             DeviationCart.syncInventory();
             renderProducts();
