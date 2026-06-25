@@ -277,6 +277,34 @@
         .auth-error { color: #dc2626; font-size: 0.9rem; min-height: 1.25rem; margin-bottom: 0.75rem; }
 
         .hidden { display: none !important; }
+
+        .panel { overflow-x: auto; }
+        table { min-width: 1200px; }
+        th, td { white-space: nowrap; }
+
+        @media (max-width: 1100px) {
+            .inventory-stats { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+        }
+
+        @media (max-width: 860px) {
+            nav { flex-direction: column; align-items: stretch; gap: 0.75rem; padding: 1rem; }
+            .nav-actions { flex-wrap: wrap; justify-content: center; }
+            .toolbar { flex-direction: column; align-items: stretch; }
+            .toolbar input, .toolbar button, .file-btn { width: 100%; }
+            .toolbar input { margin-right: 0; }
+            .inventory-stats { grid-template-columns: 1fr; }
+            .row-actions { flex-direction: column; gap: 0.35rem; }
+            .row-actions button { width: 100%; min-width: auto; }
+            .image-actions { gap: 0.25rem; }
+        }
+
+        @media (max-width: 680px) {
+            main { padding: 1rem; }
+            .toolbar { gap: 0.5rem; }
+            th, td { font-size: 0.92rem; padding: 0.55rem; }
+            .image-cell { min-width: auto; }
+            td input, td select, td textarea { font-size: 0.95rem; }
+        }
     </style>
     <link rel="stylesheet" href="features.css">
     <script src="inventory-config.js"></script>
@@ -471,9 +499,30 @@
         }
 
         let firebaseUpdatesBound = false;
+        let autoSaveTimer = null;
+        const AUTO_SAVE_DELAY = 2500;
 
         function setStatus(message) {
             statusEl.textContent = message;
+        }
+
+        function scheduleAutoSave() {
+            if (!window.FirebaseClient || !window.FirebaseClient.setProductsArray) return;
+            if (!isAuthenticated()) return;
+            if (autoSaveTimer) clearTimeout(autoSaveTimer);
+            autoSaveTimer = setTimeout(async () => {
+                syncFromInputs();
+                saveLocalInventory();
+                setStatus('Auto-saving changes to Firebase...');
+                const res = await window.FirebaseClient.setProductsArray(rows);
+                if (res && res.ok) {
+                    setStatus(`Auto-saved ${res.count} items to Firebase.`);
+                    setSaveButtonEnabled(false);
+                } else {
+                    setStatus('Auto-save failed: ' + (res && res.error ? res.error : 'unknown'));
+                    setSaveButtonEnabled(true);
+                }
+            }, AUTO_SAVE_DELAY);
         }
 
         function bindFirebaseUpdatesToTable() {
@@ -711,6 +760,7 @@
             }
             saveLocalInventory();
             setSaveButtonEnabled(true);
+            scheduleAutoSave();
         });
 
         bodyEl.addEventListener('change', async (event) => {
@@ -730,6 +780,7 @@
                 renderTable();
                 setSaveButtonEnabled(true);
                 setStatus(`Image added for ${rows[index].name || 'item #' + rows[index].id}.`);
+                scheduleAutoSave();
             };
             reader.readAsDataURL(file);
         });
@@ -743,6 +794,7 @@
                     renderTable();
                     saveLocalInventory();
                     setStatus('Image cleared.');
+                    scheduleAutoSave();
                 }
                 return;
             }
@@ -758,6 +810,7 @@
                     saveLocalInventory();
                     setSaveButtonEnabled(true);
                     setStatus(`Marked one sold for ${rows[index].name}. Stock is now ${rows[index].stock}.`);
+                    scheduleAutoSave();
                 }
                 return;
             }
@@ -772,6 +825,7 @@
                     saveLocalInventory();
                     setSaveButtonEnabled(true);
                     setStatus(`Duplicated row for ${rows[index].name}.`);
+                    scheduleAutoSave();
                 }
                 return;
             }
@@ -784,6 +838,7 @@
             saveLocalInventory();
             setSaveButtonEnabled(true);
             setStatus(`Deleted row. ${rows.length} items remaining.`);
+            scheduleAutoSave();
         });
 
         document.getElementById('unlock-btn').addEventListener('click', unlockSheet);
@@ -811,6 +866,7 @@
             renderTable();
             setSaveButtonEnabled(true);
             setStatus('Added a new row at the top. Click Save changes to push it to Firebase.');
+            scheduleAutoSave();
         });
 
         document.getElementById('download-csv').addEventListener('click', () => {
