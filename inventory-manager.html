@@ -1362,7 +1362,23 @@
             }
             markRowChanged(rows[index].id);
             if (field === 'image') {
-                renderTable();
+                const rowEl = target.closest('tr');
+                if (rowEl) {
+                    const previewCell = rowEl.querySelector('.image-cell');
+                    if (previewCell) {
+                        const src = resolveInventoryImageUrl(target.value || rows[index].image);
+                        const existing = previewCell.querySelector('.image-preview');
+                        if (existing && existing.tagName === 'IMG') {
+                            existing.src = src;
+                        } else if (existing && existing.classList.contains('empty')) {
+                            const img = document.createElement('img');
+                            img.className = 'image-preview';
+                            img.src = src;
+                            img.alt = 'Preview';
+                            existing.replaceWith(img);
+                        }
+                    }
+                }
             }
             saveLocalInventory();
             setSaveButtonEnabled(true);
