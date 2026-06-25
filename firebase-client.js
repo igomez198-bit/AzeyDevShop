@@ -18,8 +18,45 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
 
+window.FIREBASE_AUTH_USER = null;
+window.FIREBASE_AUTH_READY = false;
+
+onAuthStateChanged(auth, user => {
+  window.FIREBASE_AUTH_USER = user;
+  window.FIREBASE_AUTH_READY = true;
+  window.dispatchEvent(new Event('firebase-auth-ready'));
+  if (user) {
+    console.log('Firebase anonymous sign-in successful:', user.uid);
+  } else {
+    console.warn('Firebase auth state changed: signed out');
+  }
+});
+
+function waitForAuthReady(timeoutMs = 5000) {
+  if (window.FIREBASE_AUTH_READY) {
+    return Promise.resolve(window.FIREBASE_AUTH_USER);
+  }
+  return new Promise(resolve => {
+    const timeout = setTimeout(() => {
+      window.removeEventListener('firebase-auth-ready', onAuthReady);
+      resolve(window.FIREBASE_AUTH_USER);
+    }, timeoutMs);
+
+    function onAuthReady() {
+      clearTimeout(timeout);
+      window.removeEventListener('firebase-auth-ready', onAuthReady);
+      resolve(window.FIREBASE_AUTH_USER);
+    }
+
+    window.addEventListener('firebase-auth-ready', onAuthReady);
+  });
+}
+
 // Auto sign-in anonymously so write operations work if rules allow
-signInAnonymously(auth).catch(()=>{});
+signInAnonymously(auth).catch(error => {
+  console.error('Firebase anonymous sign-in failed:', error);
+  window.dispatchEvent(new Event('firebase-auth-ready'));
+});
 
 const productUpdateChannel = typeof BroadcastChannel !== 'undefined'
   ? new BroadcastChannel('deviation-products')
@@ -71,6 +108,10 @@ function subscribeProducts(onChange) {
 
 async function setProductsArray(products) {
   try {
+    await waitForAuthReady();
+    if (!window.FIREBASE_AUTH_USER) {
+      return { error: 'Authentication not established yet.' };
+    }
     const obj = {};
     (products || []).forEach(p => {
       const id = Number(p.id) || Date.now();
@@ -85,12 +126,18 @@ async function setProductsArray(products) {
     dispatchProductUpdate();
     return { ok: true, count: arr.length };
   } catch (e) {
-    return { error: e.message };
+    const errorMessage = e?.message || String(e);
+    console.error('Firebase setProductsArray failed:', errorMessage, { products });
+    return { error: errorMessage };
   }
 }
 
 async function addProduct(product) {
   try {
+    await waitForAuthReady();
+    if (!window.FIREBASE_AUTH_USER) {
+      return { error: 'Authentication not established yet.' };
+    }
     const snapshot = await get(ref(db, 'products'));
     const val = snapshot.exists() ? snapshot.val() : {};
     const keys = Object.keys(val || {}).map(k => Number(k)).filter(Boolean);
@@ -105,8 +152,10 @@ async function addProduct(product) {
 }
 
 async function deleteProduct(id) {
-  try {
-    await remove(ref(db, `products/${id}`));
+  try {    await waitForAuthReady();
+    if (!window.FIREBASE_AUTH_USER) {
+      return { error: 'Authentication not established yet.' };
+    }    await remove(ref(db, `products/${id}`));
     dispatchProductUpdate();
     return { ok: true };
   } catch (e) {
