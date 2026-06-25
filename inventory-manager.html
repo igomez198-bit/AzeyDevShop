@@ -280,8 +280,6 @@
     </style>
     <link rel="stylesheet" href="features.css">
     <script src="inventory-config.js"></script>
-    <script src="products.js"></script>
-    <script src="api-client.js"></script>
     <script type="module" src="firebase-client.js"></script>
     <script src="cart-utils.js"></script>
     <script src="features.js"></script>
@@ -314,20 +312,17 @@
     <main id="inventory-app" class="hidden">
         <h1>Inventory Database Sheet</h1>
         <p class="intro">
-            Add or edit deviations here. Upload a picture per item (saved as image URL or embedded data in
-            <strong>products.js</strong>). When done, download the updated files and replace them in your project folder.
+            Edit the inventory stored in Firebase. Use the buttons below to load from Firebase, save changes, or import local data into Firebase.
+            Export a CSV backup if you need a local copy.
         </p>
 
         <div class="toolbar">
             <input id="inventory-search" type="search" placeholder="Search inventory..." style="flex:1 1 260px; min-width:220px; padding:0.75rem 1rem; border-radius:0; border:2px solid var(--primary); background:var(--bg-secondary); color:var(--text); margin-right:0.8rem; box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);">
             <button type="button" id="add-row">+ Add Row</button>
-            <button type="button" class="secondary" id="reset-data">Reset to Loaded Data</button>
             <button type="button" class="success" id="download-csv">Download inventory.csv</button>
-            <button type="button" class="success" id="download-js">Download products.js</button>
-            <button type="button" class="secondary" id="push-server">Save to server</button>
             <button type="button" class="secondary" id="save-firebase">Save to Firebase</button>
             <button type="button" class="secondary" id="load-firebase">Load from Firebase</button>
-            <button type="button" class="secondary" id="import-to-firebase">Import existing -> Firebase</button>
+            <button type="button" class="secondary" id="import-to-firebase">Import local inventory -> Firebase</button>
             <label class="file-btn secondary">
                 Import CSV
                 <input type="file" id="import-csv" accept=".csv,text/csv">
@@ -495,8 +490,34 @@
             };
         }
 
+        let firebaseUpdatesBound = false;
+
         function setStatus(message) {
             statusEl.textContent = message;
+        }
+
+        function bindFirebaseUpdatesToTable() {
+            if (firebaseUpdatesBound || !window.FirebaseClient || !window.FirebaseClient.subscribeProducts) return;
+            firebaseUpdatesBound = true;
+            window.FirebaseClient.subscribeProducts(data => {
+                if (!Array.isArray(data)) return;
+                rows = data.map(normalizeRow);
+                saveLocalInventory();
+                renderTable();
+                setStatus(`Firebase inventory updated (${rows.length} items).`);
+            });
+        }
+
+        async function updateRowsFromFirebase() {
+            if (!window.FirebaseClient || !window.FirebaseClient.fetchProductsOnce) return false;
+            const data = await window.FirebaseClient.fetchProductsOnce();
+            if (Array.isArray(data)) {
+                rows = data.map(normalizeRow);
+                saveLocalInventory();
+                renderTable();
+                return true;
+            }
+            return false;
         }
 
         function loadLocalInventory() {
@@ -798,13 +819,6 @@
             setStatus('Added a new row.');
         });
 
-        document.getElementById('reset-data').addEventListener('click', () => {
-            rows = structuredClone(window.PRODUCTS || []);
-            saveLocalInventory();
-            renderTable();
-            setStatus('Reset to products.js data.');
-        });
-
         document.getElementById('download-csv').addEventListener('click', () => {
             syncFromInputs();
             saveLocalInventory();
@@ -812,29 +826,6 @@
             setStatus(`Downloaded inventory.csv with ${rows.length} rows.`);
         });
 
-        document.getElementById('download-js').addEventListener('click', () => {
-            syncFromInputs();            saveLocalInventory();            const content = 'window.PRODUCTS = ' + JSON.stringify(rows, null, 4) + ';\n';
-            downloadFile('products.js', content, 'text/javascript;charset=utf-8');
-            setStatus(`Downloaded products.js with ${rows.length} rows. Replace the file in your project folder.`);
-        });
-
-        document.getElementById('push-server').addEventListener('click', async () => {
-            syncFromInputs();
-            saveLocalInventory();
-            if (!window.ApiClient || !window.ApiClient.pushInventory) {
-                setStatus('API client not available. Is the server running?');
-                return;
-            }
-            setStatus('Saving to server...');
-            const res = await window.ApiClient.pushInventory(rows);
-            if (res && res.ok) {
-                setStatus(`Saved ${res.count} items to server.`);
-            } else if (res && res.error) {
-                setStatus('Server error: ' + res.error);
-            } else {
-                setStatus('Unexpected response from server.');
-            }
-        });
 
         document.getElementById('save-firebase').addEventListener('click', async () => {
             syncFromInputs();
@@ -867,10 +858,10 @@
         });
 
         document.getElementById('import-to-firebase').addEventListener('click', async () => {
-            // Import existing local inventory (from rows or window.PRODUCTS) into Firebase
+            // Import existing local inventory into Firebase
             syncFromInputs();
             saveLocalInventory();
-            let dataToImport = rows && rows.length ? rows : (Array.isArray(window.PRODUCTS) ? window.PRODUCTS : []);
+            let dataToImport = rows && rows.length ? rows : [];
             if (!dataToImport.length) {
                 setStatus('No local inventory found to import.');
                 return;
@@ -981,11 +972,13 @@
 
         if (isAuthenticated()) {
             setAuthenticated();
-            rows = loadLocalInventory() || structuredClone(window.PRODUCTS || []);
-            if (!rows.length) rows = structuredClone(window.PRODUCTS || []);
+            rows = loadLocalInventory() || [];
             saveLocalInventory();
             renderTable();
+            bindFirebaseUpdatesToTable();
+            updateRowsFromFirebase();
         }
     </script>
 </body>
 </html>
+
