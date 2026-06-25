@@ -646,7 +646,7 @@
                             ${STATUS_OPTIONS.map(option => `<option value="${option}" ${row.status === option ? 'selected' : ''}>${option}</option>`).join('')}
                         </select>
                     </td>
-                    <td class="row-actions"><button type="button" data-sell="${index}">Sold +1</button><button type="button" data-duplicate="${index}">Duplicate</button><button type="button" data-remove="${index}">Delete</button></td>
+                    <td class="row-actions"><button type="button" data-sell-id="${row.id}">Sold +1</button><button type="button" data-duplicate-id="${row.id}">Duplicate</button><button type="button" data-remove-id="${row.id}">Delete</button></td>
                 `;
                 bodyEl.appendChild(tr);
             });
@@ -797,10 +797,11 @@
                 return;
             }
 
-            const sellBtn = event.target.closest('[data-sell]');
+            const sellBtn = event.target.closest('[data-sell-id]');
             if (sellBtn) {
-                const index = Number(sellBtn.dataset.sell);
-                if (rows[index] && rows[index].stock > 0) {
+                const id = Number(sellBtn.dataset.sellId);
+                const index = rows.findIndex(item => Number(item.id) === id);
+                if (index >= 0 && rows[index].stock > 0) {
                     rows[index].stock = Math.max(0, rows[index].stock - 1);
                     rows[index].sold = (rows[index].sold || 0) + 1;
                     rows[index].status = rows[index].stock <= 0 ? 'Out of Stock' : rows[index].status;
@@ -813,10 +814,11 @@
                 return;
             }
 
-            const duplicateBtn = event.target.closest('[data-duplicate]');
+            const duplicateBtn = event.target.closest('[data-duplicate-id]');
             if (duplicateBtn) {
-                const index = Number(duplicateBtn.dataset.duplicate);
-                if (rows[index]) {
+                const id = Number(duplicateBtn.dataset.duplicateId);
+                const index = rows.findIndex(item => Number(item.id) === id);
+                if (index >= 0) {
                     const clone = normalizeRow({ ...rows[index], id: nextId(), name: `${rows[index].name} Copy`, sold: 0 });
                     rows.splice(index + 1, 0, clone);
                     renderTable();
@@ -828,15 +830,18 @@
                 return;
             }
 
-            const button = event.target.closest('[data-remove]');
+            const button = event.target.closest('[data-remove-id]');
             if (!button) return;
-            const index = Number(button.dataset.remove);
-            rows.splice(index, 1);
-            renderTable();
-            saveLocalInventory();
-            setSaveButtonEnabled(true);
-            setStatus(`Deleted row. ${rows.length} items remaining.`);
-            scheduleAutoSave();
+            const id = Number(button.dataset.removeId);
+            const index = rows.findIndex(item => Number(item.id) === id);
+            if (index >= 0) {
+                rows.splice(index, 1);
+                renderTable();
+                saveLocalInventory();
+                setSaveButtonEnabled(true);
+                setStatus(`Deleted row. ${rows.length} items remaining.`);
+                scheduleAutoSave();
+            }
         });
 
         document.getElementById('unlock-btn').addEventListener('click', unlockSheet);
