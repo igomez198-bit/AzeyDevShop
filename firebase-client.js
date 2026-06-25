@@ -74,8 +74,8 @@ async function setProductsArray(products) {
     const obj = {};
     (products || []).forEach(p => {
       const id = Number(p.id) || Date.now();
-      obj[id] = { ...p };
-      obj[id].id = undefined;
+      const { id: _removeId, ...payload } = p;
+      obj[id] = payload;
     });
     await set(ref(db, 'products'), obj);
     const arr = (products || []).map(p => ({ ...p }));
@@ -95,8 +95,7 @@ async function addProduct(product) {
     const val = snapshot.exists() ? snapshot.val() : {};
     const keys = Object.keys(val || {}).map(k => Number(k)).filter(Boolean);
     const nextId = keys.length ? Math.max(...keys) + 1 : 1;
-    const data = { ...product };
-    delete data.id;
+    const { id: _removeId, ...data } = product;
     await update(ref(db, `products/${nextId}`), data);
     dispatchProductUpdate();
     return { ok: true, id: nextId };
