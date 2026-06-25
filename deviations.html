@@ -939,6 +939,18 @@
         renderProducts();
         loadCart();
 
+        if (window.FirebaseClient && window.FirebaseClient.fetchProductsOnce) {
+            window.FirebaseClient.fetchProductsOnce().then(data => {
+                if (Array.isArray(data) && data.length) {
+                    DeviationCart.syncInventory();
+                    renderProducts();
+                    renderCart();
+                }
+            }).catch(() => {
+                // ignore fetch errors, page will continue with current inventory state
+            });
+        }
+
         window.addEventListener('storage', () => {
             DeviationCart.syncInventory();
             renderProducts();

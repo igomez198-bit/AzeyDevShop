@@ -8,8 +8,10 @@ window.DeviationCart = {
     CURRENCY: 'PHP',
 
     get products() {
+        const liveProducts = Array.isArray(window.PRODUCTS) && window.PRODUCTS.length ? window.PRODUCTS : null;
         const stored = this.loadInventory();
-        return Array.isArray(stored) && stored.length ? stored : (window.PRODUCTS || []);
+        if (Array.isArray(liveProducts)) return liveProducts;
+        return Array.isArray(stored) && stored.length ? stored : [];
     },
 
     loadInventory() {
@@ -33,14 +35,13 @@ window.DeviationCart = {
     },
 
     syncInventory() {
+        const liveProducts = Array.isArray(window.PRODUCTS) && window.PRODUCTS.length ? window.PRODUCTS : null;
         const stored = this.loadInventory();
-        if (Array.isArray(stored) && stored.length) {
-            window.PRODUCTS = stored;
-            return stored;
-        }
-        if (Array.isArray(window.PRODUCTS)) {
-            this.saveInventory(window.PRODUCTS);
-            return window.PRODUCTS;
+        const products = liveProducts || (Array.isArray(stored) && stored.length ? stored : []);
+        if (Array.isArray(products) && products.length) {
+            window.PRODUCTS = products;
+            this.saveInventory(products);
+            return products;
         }
         return [];
     },
