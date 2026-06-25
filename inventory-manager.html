@@ -988,11 +988,11 @@
                 const index = rows.findIndex(item => Number(item.id) === id);
                 if (index >= 0) {
                     const clone = normalizeRow({ ...rows[index], id: nextId(), name: `${rows[index].name} Copy`, sold: 0 });
-                    rows.splice(index + 1, 0, clone);
+                    rows.splice(index, 0, clone);
                     renderTable();
                     saveLocalInventory();
                     setSaveButtonEnabled(true);
-                    setStatus(`Duplicated row for ${rows[index].name}.`);
+                    setStatus(`Duplicated row for ${rows[index + 1].name}.`);
                     scheduleAutoSave();
                 }
                 return;
