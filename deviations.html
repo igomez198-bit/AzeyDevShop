@@ -512,10 +512,9 @@
     <link rel="stylesheet" href="cart-fab.css">
     <link rel="stylesheet" href="features.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="products.js"></script>
     <script type="module" src="firebase-client.js"></script>
-    <script src="cart-utils.js"></script>
-    <script src="features.js"></script>
+    <script defer src="cart-utils.js"></script>
+    <script defer src="features.js"></script>
 </head>
 <body>
     <nav>
@@ -593,12 +592,13 @@
     </button>
 
     <script>
-        const cartKey = DeviationCart.CART_KEY;
-        let cart = [];
-        let selectedCategory = 'All';
-        let searchTerm = '';
-        let lastScrollTop = 0;
-        const nav = document.querySelector('nav');
+        window.addEventListener('DOMContentLoaded', () => {
+            const cartKey = DeviationCart.CART_KEY;
+            let cart = [];
+            let selectedCategory = 'All';
+            let searchTerm = '';
+            let lastScrollTop = 0;
+            const nav = document.querySelector('nav');
 
         // Scroll detection for nav show/hide
         window.addEventListener('scroll', () => {
@@ -944,6 +944,7 @@
             renderProducts();
             renderCart();
         });
+    });
     </script>
 </body>
 </html>
