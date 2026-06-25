@@ -367,6 +367,19 @@
             align-items: center;
         }
 
+        .image-hint {
+            display: none;
+            font-size: 0.75rem;
+            color: var(--muted);
+            margin-top: 0.2rem;
+            line-height: 1.25;
+            width: 100%;
+        }
+
+        .image-actions input:placeholder-shown + .image-hint {
+            display: block;
+        }
+
         .inventory-stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -1210,29 +1223,30 @@
                     <td class="image-cell">
                         ${imagePreviewHtml(row.imageThumb || row.image)}
                         <div class="image-actions">
-                            <input type="text" value="${escapeAttr(row.image)}" data-field="image" data-index="${index}" placeholder="Image URL or file (e.g. Growshroom.png)">
+                            <input type="text" value="${escapeAttr(row.image)}" data-field="image" data-row-id="${row.id}" data-index="${index}" placeholder="Image URL or file (e.g. Growshroom.png)">
+                            <div class="image-hint">Use a full URL or local file name from the <code>images/</code> folder, e.g. <strong>Growshroom.png</strong>.</div>
                             <label class="file-btn secondary" style="font-size:0.8rem;padding:0.4rem 0.6rem;">
                                 Upload Image
-                                <input type="file" accept="image/*" data-upload="${index}">
+                                <input type="file" accept="image/*" data-upload-id="${row.id}">
                             </label>
-                            <button type="button" class="secondary" data-clear-image="${index}" style="font-size:0.8rem;padding:0.4rem 0.6rem;">Clear Image</button>
+                            <button type="button" class="secondary" data-clear-image-id="${row.id}" style="font-size:0.8rem;padding:0.4rem 0.6rem;">Clear Image</button>
                         </div>
                     </td>
-                    <td><input type="text" value="${escapeAttr(row.name)}" data-field="name" data-index="${index}"></td>
+                    <td><input type="text" value="${escapeAttr(row.name)}" data-field="name" data-row-id="${row.id}" data-index="${index}"></td>
                     <td>
-                        <select data-field="type" data-index="${index}">
+                        <select data-field="type" data-row-id="${row.id}" data-index="${index}">
                             ${TYPE_OPTIONS.map(option => `<option value="${option}" ${row.type === option ? 'selected' : ''}>${option}</option>`).join('')}
                         </select>
                     </td>
-                    <td><input type="text" value="${escapeAttr(row.generalTrait)}" data-field="generalTrait" data-index="${index}"></td>
-                    <td><input type="text" value="${escapeAttr(row.combatTerriCraft)}" data-field="combatTerriCraft" data-index="${index}"></td>
-                    <td><input type="text" value="${escapeAttr(row.deviatedTrait)}" data-field="deviatedTrait" data-index="${index}"></td>
-                    <td><input type="text" value="${escapeAttr(row.scpTrait)}" data-field="scpTrait" data-index="${index}"></td>
-                    <td><input type="number" min="0" value="${row.stock}" data-field="stock" data-index="${index}"></td>
-                    <td><input type="number" min="0" step="0.01" value="${row.price}" data-field="price" data-index="${index}"></td>
-                    <td><input type="number" min="0" value="${row.sold}" data-field="sold" data-index="${index}"></td>
+                    <td><input type="text" value="${escapeAttr(row.generalTrait)}" data-field="generalTrait" data-row-id="${row.id}" data-index="${index}"></td>
+                    <td><input type="text" value="${escapeAttr(row.combatTerriCraft)}" data-field="combatTerriCraft" data-row-id="${row.id}" data-index="${index}"></td>
+                    <td><input type="text" value="${escapeAttr(row.deviatedTrait)}" data-field="deviatedTrait" data-row-id="${row.id}" data-index="${index}"></td>
+                    <td><input type="text" value="${escapeAttr(row.scpTrait)}" data-field="scpTrait" data-row-id="${row.id}" data-index="${index}"></td>
+                    <td><input type="number" min="0" value="${row.stock}" data-field="stock" data-row-id="${row.id}" data-index="${index}"></td>
+                    <td><input type="number" min="0" step="0.01" value="${row.price}" data-field="price" data-row-id="${row.id}" data-index="${index}"></td>
+                    <td><input type="number" min="0" value="${row.sold}" data-field="sold" data-row-id="${row.id}" data-index="${index}"></td>
                     <td>
-                        <select data-field="status" data-index="${index}">
+                        <select data-field="status" data-row-id="${row.id}" data-index="${index}">
                             ${STATUS_OPTIONS.map(option => `<option value="${option}" ${row.status === option ? 'selected' : ''}>${option}</option>`).join('')}
                         </select>
                     </td>
@@ -1256,13 +1270,14 @@
 
         function syncFromInputs() {
             bodyEl.querySelectorAll('[data-field]').forEach(input => {
-                const index = Number(input.dataset.index);
+                const rowId = Number(input.dataset.rowId || input.dataset.index);
                 const field = input.dataset.field;
-                if (!rows[index]) return;
+                const row = rows.find(item => Number(item.id) === rowId);
+                if (!row) return;
                 if (field === 'stock' || field === 'price' || field === 'id' || field === 'sold') {
-                    rows[index][field] = Number(input.value);
+                    row[field] = Number(input.value);
                 } else {
-                    rows[index][field] = input.value;
+                    row[field] = input.value;
                 }
             });
             rows = rows.map(normalizeRow);
@@ -1351,22 +1366,23 @@
         bodyEl.addEventListener('input', (event) => {
             const target = event.target;
             if (!target.dataset.field) return;
-            const index = Number(target.dataset.index);
+            const rowId = Number(target.dataset.rowId || target.dataset.index);
             const field = target.dataset.field;
-            if (!rows[index]) return;
-            rows[index][field] = (field === 'stock' || field === 'price' || field === 'id' || field === 'sold')
+            const row = rows.find(item => Number(item.id) === rowId);
+            if (!row) return;
+            row[field] = (field === 'stock' || field === 'price' || field === 'id' || field === 'sold')
                 ? Number(target.value)
                 : target.value;
             if (field === 'stock') {
-                rows[index].status = rows[index].stock <= 0 ? 'Out of Stock' : 'In Stock';
+                row.status = row.stock <= 0 ? 'Out of Stock' : 'In Stock';
             }
-            markRowChanged(rows[index].id);
+            markRowChanged(row.id);
             if (field === 'image') {
                 const rowEl = target.closest('tr');
                 if (rowEl) {
                     const previewCell = rowEl.querySelector('.image-cell');
                     if (previewCell) {
-                        const src = resolveInventoryImageUrl(target.value || rows[index].image);
+                        const src = resolveInventoryImageUrl(target.value || row.image);
                         const existing = previewCell.querySelector('.image-preview');
                         if (existing && existing.tagName === 'IMG') {
                             existing.src = src;
@@ -1385,16 +1401,16 @@
         });
 
         bodyEl.addEventListener('change', async (event) => {
-            const upload = event.target.closest('[data-upload]');
+            const upload = event.target.closest('[data-upload-id]');
             if (!upload) return;
-            const index = Number(upload.dataset.upload);
+            const rowId = Number(upload.dataset.uploadId);
             const file = upload.files[0];
-            if (!file || !rows[index]) return;
+            const row = rows.find(item => Number(item.id) === rowId);
+            if (!file || !row) return;
             // If file already small, keep original; otherwise resize for storage
             try {
                 let dataUrl;
                 if (file.size <= 256 * 1024) {
-                    // small enough, encode directly
                     const reader = new FileReader();
                     dataUrl = await new Promise((res, rej) => {
                         reader.onload = () => res(String(reader.result || ''));
@@ -1402,36 +1418,56 @@
                         reader.readAsDataURL(file);
                     });
                 } else {
-                    // resize to keep payload manageable
                     dataUrl = await resizeImageFile(file, 800, 800, 0.8);
                 }
-                rows[index].image = String(dataUrl || '');
+                row.image = String(dataUrl || '');
                 try {
-                    const thumb = await createThumbnailFromDataUrl(rows[index].image, 240, 0.75);
-                    rows[index].imageThumb = thumb;
+                    const thumb = await createThumbnailFromDataUrl(row.image, 240, 0.75);
+                    row.imageThumb = thumb;
                 } catch (e) {
                     // ignore thumbnail errors
                 }
-                markRowChanged(rows[index].id);
-                renderTable();
+                markRowChanged(row.id);
+                const rowEl = upload.closest('tr');
+                if (rowEl) {
+                    const preview = rowEl.querySelector('.image-preview');
+                    if (preview && preview.tagName === 'IMG') {
+                        preview.src = resolveInventoryImageUrl(row.imageThumb || row.image);
+                    }
+                    const imageInput = rowEl.querySelector('[data-field="image"]');
+                    if (imageInput) imageInput.value = row.image;
+                }
                 saveLocalInventory();
                 setSaveButtonEnabled(true);
-                setStatus(`Image added for ${rows[index].name || 'item #' + rows[index].id}.`);
+                setStatus(`Image added for ${row.name || 'item #' + row.id}.`);
             } catch (err) {
                 console.error('Failed to read/resize image:', err);
                 alert('Failed to process image. Try a different file.');
-                upload.value = '';
+                event.target.value = '';
             }
         });
 
         bodyEl.addEventListener('click', (event) => {
-            const clearBtn = event.target.closest('[data-clear-image]');
+            const clearBtn = event.target.closest('[data-clear-image-id]');
             if (clearBtn) {
-                const index = Number(clearBtn.dataset.clearImage);
-                if (rows[index]) {
-                    rows[index].image = '';
-                    markRowChanged(rows[index].id);
-                    renderTable();
+                const rowId = Number(clearBtn.dataset.clearImageId);
+                const row = rows.find(item => Number(item.id) === rowId);
+                if (row) {
+                    row.image = '';
+                    row.imageThumb = '';
+                    markRowChanged(row.id);
+                    const rowEl = clearBtn.closest('tr');
+                    if (rowEl) {
+                        const preview = rowEl.querySelector('.image-preview');
+                        if (preview && preview.tagName === 'IMG') {
+                            const placeholder = document.createElement('div');
+                            placeholder.className = 'image-preview empty';
+                            placeholder.textContent = '🖼️';
+                            preview.replaceWith(placeholder);
+                        }
+                        const imageInput = rowEl.querySelector('[data-field="image"]');
+                        if (imageInput) imageInput.value = '';
+                    }
                     saveLocalInventory();
                     setSaveButtonEnabled(true);
                     setStatus('Image cleared.');
