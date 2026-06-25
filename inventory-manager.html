@@ -914,9 +914,25 @@
                 .replace(/</g, '&lt;');
         }
 
+        function resolveInventoryImageUrl(value) {
+            const raw = String(value || '').trim();
+            if (!raw) return '';
+            if (raw.startsWith('data:')) return raw;
+            if (raw.startsWith('//')) return raw;
+            if (/^[a-zA-Z][a-zA-Z\d+\-.]*:/.test(raw)) return raw;
+            if (raw.startsWith('images/') || raw.startsWith('./images/') || raw.startsWith('../images/') || raw.startsWith('/images/')) {
+                return raw;
+            }
+            if (raw.includes('/')) {
+                return raw;
+            }
+            return `images/${raw}`;
+        }
+
         function imagePreviewHtml(image) {
-            if (image) {
-                return `<img class="image-preview" src="${escapeAttr(image)}" alt="Preview">`;
+            const src = resolveInventoryImageUrl(image);
+            if (src) {
+                return `<img class="image-preview" src="${escapeAttr(src)}" alt="Preview">`;
             }
             return `<div class="image-preview empty">🖼️</div>`;
         }
@@ -1194,7 +1210,7 @@
                     <td class="image-cell">
                         ${imagePreviewHtml(row.imageThumb || row.image)}
                         <div class="image-actions">
-                            <input type="text" value="${escapeAttr(row.image)}" data-field="image" data-index="${index}" placeholder="Image URL">
+                            <input type="text" value="${escapeAttr(row.image)}" data-field="image" data-index="${index}" placeholder="Image URL or file (e.g. Growshroom.png)">
                             <label class="file-btn secondary" style="font-size:0.8rem;padding:0.4rem 0.6rem;">
                                 Upload Image
                                 <input type="file" accept="image/*" data-upload="${index}">
