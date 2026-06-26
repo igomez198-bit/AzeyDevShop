@@ -1565,6 +1565,9 @@
             if (event.key === 'Enter') unlockSheet();
         });
         logoutBtn.addEventListener('click', lockSheet);
+        window.addEventListener('beforeunload', () => {
+            lockSheet();
+        });
 
         document.getElementById('add-row').addEventListener('click', () => {
             const row = normalizeRow({
