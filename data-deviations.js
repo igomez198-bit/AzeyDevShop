@@ -38,6 +38,7 @@ const deviationsData = [
   {"name":"Masonic Pyramid","type":"Crafting"},
   {"name":"Mini Feaster","type":"Combat"},
   {"name":"Mini Wonder","type":"Combat"},
+  {"name":"Chaos Mini Wonder","type":"Combat"},
   {"name":"Mr Wish","type":"Combat"},
   {"name":"Nutcracker","type":"Territory"},
   {"name":"Orb Lightning","type":"Crafting"},
@@ -60,5 +61,6 @@ const deviationsData = [
   {"name":"Whalepup","type":"Combat"},
   {"name":"ZapCam","type":"Combat"},
   {"name":"Zapamander","type":"Combat"},
-  {"name":"Zeno Purifier","type":"Combat"}
+  {"name":"Zeno Purifier","type":"Combat"},
+  {"name":"Brave George","type":"Combat"}
 ];
