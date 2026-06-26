@@ -367,19 +367,6 @@
             align-items: center;
         }
 
-        .image-hint {
-            display: none;
-            font-size: 0.75rem;
-            color: var(--muted);
-            margin-top: 0.2rem;
-            line-height: 1.25;
-            width: 100%;
-        }
-
-        .image-actions input:placeholder-shown + .image-hint {
-            display: block;
-        }
-
         .inventory-stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -540,6 +527,7 @@
                 <input id="inventory-search" type="search" placeholder="Search inventory...">
             </div>
             <button type="button" id="add-row">+ Add Item</button>
+            <button type="button" class="secondary" id="imgur-link">Imgur pics</button>
             <button type="button" class="secondary" id="load-firebase">Refresh</button>
             <button type="button" class="secondary" id="convert-images" title="Convert external image URLs to optimized thumbnails">Convert images (optimize)</button>
             <button type="button" class="success" id="save-firebase" disabled>Save changes</button>
@@ -1224,7 +1212,6 @@
                         ${imagePreviewHtml(row.imageThumb || row.image)}
                         <div class="image-actions">
                             <input type="text" value="${escapeAttr(row.image)}" data-field="image" data-row-id="${row.id}" data-index="${index}" placeholder="Image URL or file (e.g. Growshroom.png)">
-                            <div class="image-hint">Use a full URL or local file name from the <code>images/</code> folder, e.g. <strong>Growshroom.png</strong>.</div>
                             <label class="file-btn secondary" style="font-size:0.8rem;padding:0.4rem 0.6rem;">
                                 Upload Image
                                 <input type="file" accept="image/*" data-upload-id="${row.id}">
@@ -1549,6 +1536,10 @@
             renderTable();
             setSaveButtonEnabled(true);
             setStatus('Added a new row at the top. Click Save changes to push it to Firebase.');
+        });
+
+        document.getElementById('imgur-link').addEventListener('click', () => {
+            window.open('https://imgur.com/a/8wkzDtS', '_blank');
         });
 
         document.getElementById('save-firebase').addEventListener('click', async () => {
