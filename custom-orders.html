@@ -559,6 +559,8 @@
             const container = document.getElementById('traitsContainer');
             container.innerHTML = '';
 
+            const uniqueTraits = [...new Set(traitsData.map(t => t.name))].sort();
+
             for (let i = 0; i < 5; i++) {
                 const group = document.createElement('div');
                 group.style.display = 'flex';
@@ -588,7 +590,6 @@
                 option.textContent = '-- Choose trait --';
                 select.appendChild(option);
 
-                const uniqueTraits = [...new Set(traitsData.map(t => t.name))];
                 uniqueTraits.forEach(trait => {
                     const opt = document.createElement('option');
                     opt.value = trait;
