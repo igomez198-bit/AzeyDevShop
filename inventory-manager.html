@@ -866,6 +866,22 @@
             };
         }
 
+        function preserveRowDisplayOrder(remoteRows) {
+            const remoteById = new Map(remoteRows.map(row => [Number(row.id), row]));
+            const ordered = [];
+            rows.forEach(existingRow => {
+                const id = Number(existingRow.id);
+                if (remoteById.has(id)) {
+                    ordered.push(remoteById.get(id));
+                    remoteById.delete(id);
+                }
+            });
+            if (remoteById.size) {
+                ordered.push(...Array.from(remoteById.values()));
+            }
+            return ordered;
+        }
+
         let firebaseUpdatesBound = false;
         function setStatus(message) {
             statusEl.textContent = message;
@@ -897,7 +913,8 @@
             firebaseUpdatesBound = true;
             window.FirebaseClient.subscribeProducts(data => {
                 if (!Array.isArray(data)) return;
-                rows = data.map(normalizeRow);
+                const normalized = data.map(normalizeRow);
+                rows = rows.length ? preserveRowDisplayOrder(normalized) : normalized;
                 saveLocalInventory();
                 renderTable();
                 resetChangeTracking();
@@ -919,7 +936,8 @@
                 return true;
             }
 
-            rows = data.map(normalizeRow);
+            const normalized = data.map(normalizeRow);
+            rows = rows.length ? preserveRowDisplayOrder(normalized) : normalized;
             saveLocalInventory();
             renderTable();
             resetChangeTracking();
