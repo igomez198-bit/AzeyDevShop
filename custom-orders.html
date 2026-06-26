@@ -11,7 +11,7 @@
         :root {
             --primary: #00ffff;
             --secondary: #ff006e;
-            --accent: #ffbe0b;
+            --accent: #67f0ff;
             --bg: #0a0e27;
             --bg-secondary: #1a1f3a;
             --text: #e0f7ff;
@@ -215,6 +215,47 @@
             width: 80px;
         }
 
+        .deviation-dropdown,
+        .trait-dropdown {
+            position: relative;
+            min-width: 0;
+        }
+
+        .dropdown-list {
+            display: none;
+            position: absolute;
+            z-index: 20;
+            left: 0;
+            width: 100%;
+            max-height: 300px;
+            overflow-y: auto;
+            background: var(--card);
+            border: 2px solid var(--border);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.35);
+            margin-top: 0.25rem;
+        }
+
+        .dropdown-list.visible {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 0.75rem;
+            cursor: pointer;
+            color: var(--text);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: transparent;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .dropdown-item.empty {
+            cursor: default;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
         button {
             background: var(--primary);
             color: var(--bg);
@@ -278,11 +319,11 @@
 
         .receipt {
             display: none;
-            background: var(--card);
-            border: 2px solid var(--primary);
+            background: rgba(10, 14, 39, 0.95);
+            border: 1px solid rgba(26, 143, 255, 0.55);
             padding: 2rem;
             border-radius: 0;
-            box-shadow: 0 0 30px rgba(0, 255, 255, 0.2);
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.15);
         }
 
         .receipt.active {
@@ -291,22 +332,37 @@
 
         .receipt-header {
             text-align: center;
-            border-bottom: 2px dashed var(--primary);
+            border-bottom: 2px dashed rgba(64, 224, 255, 0.45);
             padding-bottom: 1rem;
-            margin-bottom: 1rem;
+            margin-bottom: 1.25rem;
         }
 
         .receipt-title {
-            font-size: 1.5rem;
-            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            font-size: 2.3rem;
+            font-weight: 800;
             color: var(--primary);
-            text-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+            letter-spacing: 0.08em;
             margin-bottom: 0.5rem;
+            position: relative;
+        }
+
+        .receipt-title::before,
+        .receipt-title::after {
+            content: '';
+            display: block;
+            width: 4rem;
+            height: 4px;
+            background: var(--primary);
+            opacity: 0.85;
         }
 
         .receipt-number {
-            color: var(--muted);
-            font-size: 0.9rem;
+            color: rgba(118, 208, 255, 0.95);
+            font-size: 0.95rem;
             margin-bottom: 1rem;
         }
 
@@ -339,34 +395,74 @@
             color: var(--primary);
         }
 
+        .receipt-status {
+            background: rgba(4, 35, 63, 0.95);
+            border: 1px solid rgba(0, 255, 255, 0.14);
+            padding: 1rem 1.25rem;
+            margin: 0.75rem 0 1rem 0;
+            text-align: center;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .receipt-status span {
+            color: var(--text);
+            opacity: 0.8;
+        }
+
+        .receipt-status strong {
+            color: var(--accent);
+            font-size: 1.2rem;
+        }
+
         .receipt-total {
-            text-align: right;
-            margin: 1rem 0;
+            text-align: center;
+            margin: 1.25rem 0;
             padding: 1rem;
-            background: rgba(0, 255, 255, 0.1);
-            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.02);
+            border: none;
         }
 
         .receipt-total p {
-            font-size: 1.1rem;
-            color: var(--muted);
-            margin-bottom: 0.5rem;
+            font-size: 1rem;
+            color: #ebf8ff;
+            margin-bottom: 0;
         }
 
-        .receipt-total .total {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--accent);
-            text-shadow: 0 0 8px rgba(255, 190, 11, 0.3);
+        .receipt-total p strong,
+        .receipt-total p em {
+            color: #fff;
         }
 
         .receipt-footer {
             text-align: center;
             margin-top: 1.5rem;
             padding-top: 1rem;
-            border-top: 2px dashed var(--primary);
+            border-top: 2px dashed rgba(64, 224, 255, 0.35);
             color: var(--muted);
-            font-size: 0.85rem;
+            font-size: 0.95rem;
+        }
+
+        .receipt-footer .button-group {
+            justify-content: center;
+            margin-top: 1rem;
+        }
+
+        .receipt-footer button {
+            width: min(100%, 320px);
+            padding: 1rem 1.25rem;
+            font-size: 0.95rem;
+            background: var(--accent);
+            border-color: var(--accent);
+            color: var(--bg);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            box-shadow: 0 0 20px rgba(255, 190, 11, 0.3);
+            border-radius: 0;
         }
 
         .button-group {
@@ -376,8 +472,11 @@
         }
 
         .button-group button {
-            flex: 1;
             min-width: 120px;
+        }
+
+        .receipt-footer .button-group button {
+            flex: 0;
         }
 
         #receipt-items-list {
@@ -456,9 +555,10 @@
 
                 <div class="form-group">
                     <label>Select Deviation</label>
-                    <select id="deviationSelect">
-                        <option value="">-- Choose a deviation --</option>
-                    </select>
+                    <div class="deviation-dropdown">
+                        <input type="text" id="deviationSelect" placeholder="Type to search deviations..." autocomplete="off">
+                        <div id="deviationDropdown" class="dropdown-list"></div>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -498,7 +598,7 @@
             <div class="receipt-section">
                 <div id="receipt" class="receipt">
                     <div class="receipt-header">
-                        <div class="receipt-title">═══ ORDER RECEIPT ═══</div>
+                        <div class="receipt-title">ORDER RECEIPT</div>
                         <div class="receipt-number">Order #<span id="receiptNumber"></span></div>
                     </div>
 
@@ -512,15 +612,19 @@
                         <ul id="receipt-items-list"></ul>
                     </div>
 
-                    <div class="receipt-total">
-                        <p class="total">Status: PENDING</p>
+                    <div class="receipt-status">
+                        <span>Status:</span>
+                        <strong>PENDING</strong>
+                    </div>
+
+                    <div class="receipt-total" style="text-align: center;">
+                        <p class="total" style="color: #ffffff;">Click <strong>Copy Receipt</strong>, then send it to <strong>Iain Gomez</strong> on Facebook or <em><strong>_azeaze_</strong></em> on Discord.</p>
                     </div>
 
                     <div class="receipt-footer">
-                        <p>Click <strong>Copy Receipt</strong>, then send it to <strong>Iain Gomez</strong> on Facebook or <strong><em>_azeaze</em></strong> on Discord.</p>
                         <p style="margin-top: 1rem;">═══════════════════════════</p>
-                        <div style="margin-top: 1.5rem; display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                            <button onclick="copyReceipt()" style="padding: 0.5rem 1rem; font-size: 0.75rem; background: var(--accent); border-color: var(--accent); color: var(--bg);">📋 Copy Receipt</button>
+                        <div class="button-group" style="margin-top: 1.5rem; justify-content: center;">
+                            <button onclick="copyReceipt(event)">📋 Copy Receipt</button>
                         </div>
                     </div>
                 </div>
@@ -545,17 +649,48 @@
         });
 
         function populateDeviationSelect() {
-            const select = document.getElementById('deviationSelect');
-            
-            deviationsData.forEach(dev => {
-                const option = document.createElement('option');
-                option.value = dev.name;
-                option.textContent = `${dev.name} (${dev.type})`;
-                select.appendChild(option);
+            const input = document.getElementById('deviationSelect');
+            const dropdown = document.getElementById('deviationDropdown');
+
+            function renderDropdown(filterText = '') {
+                const normalizedFilter = filterText.toLowerCase();
+                dropdown.innerHTML = '';
+                const matches = deviationsData.filter(dev => dev.name.toLowerCase().includes(normalizedFilter));
+
+                if (matches.length === 0) {
+                    const item = document.createElement('div');
+                    item.className = 'dropdown-item empty';
+                    item.textContent = 'No deviations found';
+                    dropdown.appendChild(item);
+                } else {
+                    matches.forEach(dev => {
+                        const item = document.createElement('div');
+                        item.className = 'dropdown-item';
+                        item.textContent = `${dev.name} (${dev.type})`;
+                        item.addEventListener('mousedown', (e) => {
+                            e.preventDefault();
+                            input.value = dev.name;
+                            updateTraitSelectors(dev.name);
+                            dropdown.classList.remove('visible');
+                        });
+                        dropdown.appendChild(item);
+                    });
+                }
+            }
+
+            input.addEventListener('input', () => {
+                renderDropdown(input.value);
+                dropdown.classList.add('visible');
+                updateTraitSelectors(input.value);
             });
 
-            select.addEventListener('change', () => {
-                updateTraitSelectors(select.value);
+            input.addEventListener('focus', () => {
+                renderDropdown(input.value);
+                dropdown.classList.add('visible');
+            });
+
+            input.addEventListener('blur', () => {
+                setTimeout(() => dropdown.classList.remove('visible'), 150);
             });
         }
 
@@ -575,33 +710,69 @@
                 label.style.fontWeight = '600';
                 label.style.minWidth = '60px';
 
-                const select = document.createElement('select');
-                select.id = `trait${i}`;
-                select.style.flex = '1';
-                select.style.padding = '0.75rem';
-                select.style.border = '2px solid var(--border)';
-                select.style.background = 'var(--bg-secondary)';
-                select.style.color = 'var(--text)';
-                select.style.borderRadius = '0';
-                select.style.fontSize = '1rem';
-                select.style.transition = 'all 0.2s';
-                select.style.fontFamily = 'inherit';
-                
                 if (i < 4) {
-                    const option = document.createElement('option');
-                    option.value = '';
-                    option.textContent = '-- Choose trait --';
-                    select.appendChild(option);
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'trait-dropdown';
+                    wrapper.style.flex = '1';
+
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.id = `trait${i}`;
+                    input.placeholder = 'Type to search traits...';
+                    input.autocomplete = 'off';
+
+                    const dropdown = document.createElement('div');
+                    dropdown.id = `traitDropdown${i}`;
+                    dropdown.className = 'dropdown-list';
+
+                    input.addEventListener('input', (e) => {
+                        renderTraitDropdown(i, e.target.value);
+                    });
+
+                    input.addEventListener('focus', (e) => {
+                        renderTraitDropdown(i, e.target.value);
+                        dropdown.classList.add('visible');
+                        input.select();
+                    });
+
+                    input.addEventListener('keydown', (e) => {
+                        const ignoreKeys = ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Tab','Shift','Control','Alt','Meta','Escape'];
+                        if (input.value && !ignoreKeys.includes(e.key) && !e.ctrlKey && !e.metaKey) {
+                            if (input.selectionStart === 0 && input.selectionEnd === input.value.length) {
+                                input.value = '';
+                                selectedTraits[i] = '';
+                                renderTraitDropdown(i, '');
+                            }
+                        }
+                    });
+
+                    input.addEventListener('blur', () => {
+                        setTimeout(() => dropdown.classList.remove('visible'), 150);
+                    });
+
+                    wrapper.appendChild(input);
+                    wrapper.appendChild(dropdown);
+                    group.appendChild(label);
+                    group.appendChild(wrapper);
                 } else {
-                    select.disabled = true;
+                    const display = document.createElement('div');
+                    display.id = `trait${i}`;
+                    display.style.flex = '1';
+                    display.style.padding = '0.75rem';
+                    display.style.border = '2px solid var(--border)';
+                    display.style.background = 'var(--bg-secondary)';
+                    display.style.color = 'var(--text)';
+                    display.style.borderRadius = '0';
+                    display.style.fontSize = '1rem';
+                    display.style.display = 'flex';
+                    display.style.alignItems = 'center';
+                    display.style.minHeight = '2.5rem';
+                    display.textContent = 'No fifth trait available';
+
+                    group.appendChild(label);
+                    group.appendChild(display);
                 }
 
-                select.addEventListener('change', (e) => {
-                    selectedTraits[i] = e.target.value;
-                });
-
-                group.appendChild(label);
-                group.appendChild(select);
                 container.appendChild(group);
             }
 
@@ -610,6 +781,39 @@
 
         function isChaosDeviation(name) {
             return typeof name === 'string' && /(^Chaos|Chaos )/.test(name);
+        }
+
+        function renderTraitDropdown(slotIndex, filterText = '') {
+            const input = document.getElementById(`trait${slotIndex}`);
+            const dropdown = document.getElementById(`traitDropdown${slotIndex}`);
+            if (!input || !dropdown) return;
+
+            const selectedDeviation = document.getElementById('deviationSelect').value;
+            const availableTraits = getAvailableTraits(selectedDeviation, slotIndex);
+            const normalizedFilter = filterText.toLowerCase();
+            dropdown.innerHTML = '';
+
+            const matches = availableTraits.filter(name => name.toLowerCase().includes(normalizedFilter));
+            if (matches.length === 0) {
+                const item = document.createElement('div');
+                item.className = 'dropdown-item empty';
+                item.textContent = 'No traits found';
+                dropdown.appendChild(item);
+                return;
+            }
+
+            matches.forEach(name => {
+                const item = document.createElement('div');
+                item.className = 'dropdown-item';
+                item.textContent = name;
+                item.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    input.value = name;
+                    selectedTraits[slotIndex] = name;
+                    dropdown.classList.remove('visible');
+                });
+                dropdown.appendChild(item);
+            });
         }
 
         function getAvailableTraits(selectedDeviation, slotIndex) {
@@ -636,56 +840,38 @@
 
         function updateTraitSelectors(selectedDeviation) {
             for (let i = 0; i < 4; i++) {
-                const select = document.getElementById(`trait${i}`);
-                if (!select) continue;
+                const input = document.getElementById(`trait${i}`);
+                if (!input) continue;
 
                 const availableTraits = getAvailableTraits(selectedDeviation, i);
-                const currentValue = select.value;
-                select.innerHTML = '';
+                const currentValue = input.value.trim();
+                const dropdown = document.getElementById(`traitDropdown${i}`);
 
-                const option = document.createElement('option');
-                option.value = '';
-                option.textContent = '-- Choose trait --';
-                select.appendChild(option);
-
-                availableTraits.forEach(trait => {
-                    const opt = document.createElement('option');
-                    opt.value = trait;
-                    opt.textContent = trait;
-                    select.appendChild(opt);
-                });
-
-                if (availableTraits.includes(currentValue)) {
-                    select.value = currentValue;
-                    selectedTraits[i] = currentValue;
-                } else {
-                    select.value = '';
+                if (!availableTraits.includes(currentValue)) {
+                    input.value = '';
                     selectedTraits[i] = '';
+                } else {
+                    selectedTraits[i] = currentValue;
                 }
 
-                select.disabled = false;
+                if (dropdown && dropdown.classList.contains('visible')) {
+                    renderTraitDropdown(i, input.value);
+                }
             }
 
             updateTraitFiveOptions(selectedDeviation);
         }
 
         function updateTraitFiveOptions(selectedDeviation) {
-            const select = document.getElementById('trait4');
-            if (!select) return;
-
-            select.innerHTML = '';
-            selectedTraits[4] = '';
+            const display = document.getElementById('trait4');
+            if (!display) return;
 
             if (isChaosDeviation(selectedDeviation)) {
-                const chaosOption = document.createElement('option');
-                chaosOption.value = 'Chaos';
-                chaosOption.textContent = 'Chaos';
-                select.appendChild(chaosOption);
-                select.disabled = true;
-                select.value = 'Chaos';
+                display.textContent = 'Chaos';
                 selectedTraits[4] = 'Chaos';
             } else {
-                select.disabled = true;
+                display.textContent = 'No fifth trait available';
+                selectedTraits[4] = '';
             }
         }
 
@@ -760,13 +946,24 @@
 
             // Populate order items in receipt
             const itemsList = document.getElementById('receipt-items-list');
-            itemsList.innerHTML = orderItems.map((item, idx) => `
-                <li class="receipt-item" style="flex-direction: column; align-items: flex-start; border: none; border-top: 1px dotted rgba(0, 255, 255, 0.2); padding: 0.75rem 0; margin: 0.5rem 0;">
-                    <strong style="color: var(--accent); margin-bottom: 0.3rem;">Item ${idx + 1}: ${item.deviation}</strong>
-                    ${item.traits.length > 0 ? `<span style="color: var(--text); margin-left: 1rem; font-size: 0.9rem;">Traits: ${item.traits.join(', ')}</span>` : ''}
-                    ${item.notes ? `<span style="color: var(--muted); margin-left: 1rem; font-size: 0.85rem; font-style: italic;">Notes: ${item.notes}</span>` : ''}
-                </li>
-            `).join('');
+            itemsList.innerHTML = orderItems.map((item, idx) => {
+                const traitLines = item.traits.length > 0
+                    ? item.traits.map((trait, traitIdx) => `
+                        <div style="color: var(--text); margin-left: 1rem; font-size: 0.95rem;">Trait ${traitIdx + 1}: ${trait}</div>`).join('')
+                    : `<div style="color: var(--muted); margin-left: 1rem; font-size: 0.95rem;">Trait 1: (No traits selected)</div>`;
+
+                const notesLine = item.notes
+                    ? `<div style="color: var(--muted); margin-left: 1rem; font-size: 0.85rem; font-style: italic; margin-top: 0.3rem;">Notes: ${item.notes}</div>`
+                    : '';
+
+                return `
+                    <li class="receipt-item" style="flex-direction: column; align-items: flex-start; border: none; border-top: 1px dotted rgba(0, 255, 255, 0.2); padding: 0.75rem 0; margin: 0.5rem 0;">
+                        <strong style="color: var(--accent); margin-bottom: 0.5rem;">Item ${idx + 1}: ${item.deviation}</strong>
+                        ${traitLines}
+                        ${notesLine}
+                    </li>
+                `;
+            }).join('');
 
             // Show receipt
             document.getElementById('receipt').classList.add('active');
@@ -796,36 +993,31 @@
             }
         }
 
-        function copyReceipt() {
+        function copyReceipt(event) {
             const receiptNum = document.getElementById('receiptNumber').textContent;
             const customerName = document.getElementById('receiptCustomer').textContent;
             const date = document.getElementById('receiptDate').textContent;
             
-            // Build receipt text
-            let receiptText = '═══ ORDER RECEIPT ═══\n';
-            receiptText += `Order #${receiptNum}\n\n`;
+            // Build receipt text in classic plain format
+            let receiptText = 'ORDER RECEIPT\n';
+            receiptText += `Order #${receiptNum}\n`;
             receiptText += `Customer: ${customerName}\n`;
             receiptText += `Date: ${date}\n\n`;
             receiptText += 'ORDER ITEMS:\n';
-            receiptText += '───────────────────────\n';
-            
-            // Get each order item
+
             orderItems.forEach((item, idx) => {
-                receiptText += `Item ${idx + 1}: ${item.deviation}\n`;
+                receiptText += `${idx + 1}. ${item.deviation}\n`;
                 if (item.traits.length > 0) {
-                    receiptText += `Traits: ${item.traits.join(', ')}\n`;
+                    receiptText += `   Traits: ${item.traits.join(', ')}\n`;
+                } else {
+                    receiptText += '   Traits: None\n';
                 }
                 if (item.notes) {
-                    receiptText += `Notes: ${item.notes}\n`;
+                    receiptText += `   Notes: ${item.notes}\n`;
                 }
                 receiptText += '\n';
             });
-            
-            receiptText += '───────────────────────\n';
-            receiptText += 'Status: PENDING\n\n';
-            receiptText += 'Thank you for your order!\n';
-            receiptText += 'Please save this receipt for your records.\n';
-            receiptText += '═════════════════════════';
+            receiptText += 'Please send this receipt to Iain Gomez on Facebook or _azeaze_ on Discord.\n';
             
             // Copy to clipboard
             navigator.clipboard.writeText(receiptText).then(() => {
