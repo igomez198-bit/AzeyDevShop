@@ -523,6 +523,27 @@
             .image-cell { min-width: auto; }
             .row-actions button { padding: 0.45rem 0.65rem; font-size: 0.78rem; }
         }
+
+        @media (max-width: 520px) {
+            main { padding: 4rem 0.75rem 1rem; }
+            .toolbar { gap: 0.5rem; }
+            .toolbar .search-group { flex: 1 1 100%; min-width: 0; }
+            .toolbar input,
+            .toolbar button { width: 100%; }
+            .toolbar input { margin-right: 0; }
+            .table-panel { overflow-x: auto; }
+            table { min-width: 0; }
+            th, td { font-size: 0.75rem; padding: 0.55rem 0.45rem; }
+            td input,
+            td select,
+            td textarea { font-size: 0.82rem; }
+            .row-actions { flex-direction: column; gap: 0.35rem; }
+            .row-actions button { width: 100%; min-width: auto; }
+            .image-actions { flex-direction: column; gap: 0.35rem; }
+            .inventory-stats { grid-template-columns: 1fr; gap: 0.75rem; }
+            .image-preview { width: 50px; height: 50px; }
+            .stat-card { padding: 0.85rem; }
+        }
     </style>
     <link rel="stylesheet" href="features.css">
     <script src="inventory-config.js"></script>
@@ -627,7 +648,7 @@
             'id', 'image', 'name', 'type', 'generalTrait', 'combatTerriCraft',
             'deviatedTrait', 'scpTrait', 'stock', 'price', 'sold', 'status'
         ];
-        const TYPE_OPTIONS = ['Starfall', 'Variant', 'Lunar', 'Chaos', 'Normal'];
+        const TYPE_OPTIONS = ['Starfall', 'Variant', 'Lunar', 'Aberrant', 'Chaos', 'Normal'];
         const STATUS_OPTIONS = ['In Stock', 'Out of Stock'];
         const INVENTORY_KEY = 'deviation_inventory_v1';
         const INVENTORY_CSV_FALLBACK = `"id","name","type","generalTrait","combatTerriCraft","deviatedTrait","scpTrait","stock","price","status","image"

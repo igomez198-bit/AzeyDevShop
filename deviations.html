@@ -502,6 +502,55 @@
         @media (max-width: 520px) {
             .cart-panel { width: 100%; }
             .cart-item { width: 100%; }
+            .hero {
+                padding: 3rem 1rem;
+            }
+            .hero h1 {
+                font-size: 2rem;
+            }
+            .hero p {
+                font-size: 0.95rem;
+            }
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-input {
+                flex: 1 1 100%;
+                width: 100%;
+                max-width: 100%;
+                min-width: 0;
+            }
+            .filter-group {
+                justify-content: flex-start;
+                width: 100%;
+            }
+            .filter-btn {
+                padding: 0.6rem 0.85rem;
+                font-size: 0.85rem;
+            }
+            .sort-select {
+                width: 100%;
+            }
+            .product-grid {
+                gap: 1rem;
+            }
+            .product-card {
+                padding: 1rem;
+            }
+            .product-title {
+                font-size: 1.1rem;
+            }
+            .price {
+                font-size: 1.25rem;
+            }
+            .traits li {
+                font-size: 0.75rem;
+                padding: 0.2rem 0.45rem;
+            }
+            .buy-btn {
+                padding: 0.65rem;
+            }
         }
 
         @media (max-width: 640px) {
@@ -613,7 +662,7 @@
             lastScrollTop = currentScroll <= 0 ? 0 : currentScroll;
         });
 
-        const categories = ['All', 'Starfall', 'Variant', 'Lunar', 'Chaos', 'Normal'];
+        const categories = ['All', 'Starfall', 'Variant', 'Lunar', 'Aberrant', 'Chaos', 'Normal'];
 
         const cartCountEl = document.getElementById('cart-count');
         const cartTrigger = document.getElementById('cart-fab');

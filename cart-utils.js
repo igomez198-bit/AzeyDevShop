@@ -319,9 +319,9 @@ window.DeviationCart = {
     getCategories() {
         try {
             const raw = localStorage.getItem(this.CATEGORIES_KEY);
-            return raw ? JSON.parse(raw) : ['Starfall', 'Variant', 'Lunar', 'Chaos', 'Normal'];
+            return raw ? JSON.parse(raw) : ['Starfall', 'Variant', 'Lunar', 'Aberrant', 'Chaos', 'Normal'];
         } catch (e) {
-            return ['Starfall', 'Variant', 'Lunar', 'Chaos', 'Normal'];
+            return ['Starfall', 'Variant', 'Lunar', 'Aberrant', 'Chaos', 'Normal'];
         }
     },
     saveCategories(categories) {
