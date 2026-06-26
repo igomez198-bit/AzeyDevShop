@@ -612,25 +612,34 @@
             return typeof name === 'string' && /(^Chaos|Chaos )/.test(name);
         }
 
-        function getAvailableTraits(selectedDeviation) {
-            const allTraits = [...new Set(traitsData.map(t => t.name))].sort();
-            if (!isChaosDeviation(selectedDeviation)) {
-                return allTraits;
-            }
-            return traitsData
-                .filter(trait => trait.type !== 'variation')
+        function getAvailableTraits(selectedDeviation, slotIndex) {
+            const slotCategories = {
+                0: ['Global', 'Variation'],
+                1: ['Territory', 'Crafting', 'Combat', 'Variation'],
+                2: ['Furniture', 'Animal'],
+                3: ['SCP']
+            };
+
+            const allTraits = traitsData
+                .filter(trait => {
+                    if (slotCategories[slotIndex]) {
+                        return slotCategories[slotIndex].includes(trait.category);
+                    }
+                    return true;
+                })
                 .map(trait => trait.name)
                 .filter((name, index, arr) => arr.indexOf(name) === index)
                 .sort();
+
+            return allTraits;
         }
 
         function updateTraitSelectors(selectedDeviation) {
-            const availableTraits = getAvailableTraits(selectedDeviation);
-
             for (let i = 0; i < 4; i++) {
                 const select = document.getElementById(`trait${i}`);
                 if (!select) continue;
 
+                const availableTraits = getAvailableTraits(selectedDeviation, i);
                 const currentValue = select.value;
                 select.innerHTML = '';
 
