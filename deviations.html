@@ -37,8 +37,26 @@
             position: relative;
             overflow-x: hidden;
         }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 255, 255, 0.03) 0px,
+                rgba(0, 255, 255, 0.03) 2px,
+                transparent 2px,
+                transparent 4px
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
 
-        /* Navigation */
+        /* Nav (copied from index.html for consistency) */
         nav {
             background: rgba(10, 14, 29, 0.98);
             padding: 1rem 2rem;
@@ -76,14 +94,14 @@
         }
 
         .nav-actions a {
+            color: var(--text);
+            text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
             background: rgba(15, 23, 42, 0.95);
-            color: var(--text);
             padding: 0.75rem 1rem;
             border-radius: 999px;
-            text-decoration: none;
             border: 1px solid rgba(56, 189, 248, 0.24);
             transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
         }
@@ -94,86 +112,32 @@
             background: rgba(56, 189, 248, 0.08);
         }
 
-        .nav-cta {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.25rem;
-            background: linear-gradient(90deg, rgba(0, 255, 255, 0.9), rgba(0, 217, 255, 0.9));
-            color: #06121b;
-            padding: 0.75rem 1.25rem;
-            border-radius: 999px;
-            font-weight: 700;
+        .cta-button {
+            background-color: var(--primary);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
             text-decoration: none;
-            border: 1px solid rgba(0, 255, 255, 0.24);
-            box-shadow: 0 14px 30px rgba(0, 255, 255, 0.15);
-            transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
+            font-weight: 600;
+            transition: background 0.2s;
         }
 
-        .nav-cta:hover {
-            transform: translateY(-1px);
-            filter: brightness(1.05);
-        }
-
-        .nav-toggle {
-            display: none;
-            width: 3.4rem;
-            height: 3.4rem;
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            border-radius: 0.8rem;
-            background: rgba(15, 23, 42, 0.95);
-            color: var(--text);
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            padding: 0.5rem;
-            transition: transform 0.2s, border-color 0.2s, background 0.2s;
-            user-select: none;
-            flex-direction: column;
-            overflow: visible;
-            position: relative;
-        }
-
-        .nav-toggle span {
-            display: block;
-            width: 18px;
-            height: 2px;
-            border-radius: 999px;
-            background: var(--text);
-            transition: transform 0.3s ease, opacity 0.3s ease;
-        }
-
-        .nav-toggle span + span {
-            margin-top: 0.35rem;
-        }
-
-        nav.open .nav-toggle span:nth-child(1) {
-            transform: translateY(6px) rotate(45deg);
-        }
-
-        nav.open .nav-toggle span:nth-child(2) {
-            opacity: 0;
-        }
-
-        nav.open .nav-toggle span:nth-child(3) {
-            transform: translateY(-6px) rotate(-45deg);
+        .cta-button:hover {
+            background-color: var(--secondary);
         }
 
         .nav-icon {
-            width: 18px;
-            height: 18px;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
-            line-height: 1;
-            vertical-align: middle;
         }
 
-        /* duplicate nav-toggle rules removed (consolidated above) */
-
         .hero {
+            padding: 4rem 1.5rem 3rem;
             text-align: center;
+            background: linear-gradient(180deg, #0a0e27 0%, #1a1f3a 50%, #0f1835 100%);
+            border-bottom: 2px solid rgba(0, 255, 255, 0.3);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.15), inset 0 0 30px rgba(0, 255, 255, 0.05);
         }
 
         .hero h1 {
@@ -205,7 +169,6 @@
             box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
             border: 2px solid var(--primary);
             transition: all 0.2s;
-            margin: 1.25rem auto 0;
         }
         
         .hero a:hover {
@@ -310,106 +273,51 @@
 
         .product-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 1.75rem;
-            align-items: stretch; /* allow items to stretch to equal heights */
-            grid-auto-rows: 1fr; /* make each row auto-fill equally */
-            max-width: 1400px; /* constrain grid width */
-            margin: 0 auto; /* center grid in container */
-            justify-content: center; /* center tracks when there's extra space */
-        }
-
-        /* Large-screen columns: 5 columns on wide, 6 on extra-wide */
-        @media (min-width: 1400px) {
-            .product-grid {
-                grid-template-columns: repeat(5, minmax(260px, 1fr));
-                gap: 2rem;
-            }
-            .featured-grid {
-                grid-template-columns: repeat(5, minmax(260px, 1fr));
-            }
-        }
-
-        @media (min-width: 1800px) {
-            .product-grid,
-            .featured-grid {
-                grid-template-columns: repeat(6, minmax(240px, 1fr));
-                gap: 2rem;
-            }
-        }
-
-        /* Compact cards on desktop to match mobile density */
-        @media (min-width: 1200px) {
-            .product-card {
-                padding: 0.85rem !important;
-                gap: 0.5rem !important;
-                border-radius: 0.85rem;
-            }
-            .product-image,
-            .product-image-link {
-                height: 120px !important; /* shorter images on desktop */
-            }
-            .product-card h3 {
-                font-size: 1rem !important;
-            }
-            .label {
-                padding: 0.24rem 0.5rem !important;
-                font-size: 0.75rem !important;
-            }
-            .trait-box {
-                padding: 0.28rem 0.45rem !important;
-            }
-            .action-btn,
-            .buy-btn {
-                padding: 0.5rem 0.8rem !important;
-                font-size: 0.9rem !important;
-            }
         }
 
         .product-card {
-            background: linear-gradient(180deg, rgba(10, 14, 29, 0.98), rgba(15, 23, 42, 0.98));
-            border: 1px solid rgba(124, 58, 237, 0.16);
-            border-radius: 1rem;
-            padding: 1rem; /* reduced padding to compact cards */
-            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.28);
+            background: var(--card-bg);
+            border: 2px solid var(--border);
+            border-radius: 0;
+            padding: 1.5rem;
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.15);
             display: flex;
             flex-direction: column;
-            gap: 0.6rem; /* smaller vertical gaps */
-            transition: transform 0.18s, border-color 0.18s, box-shadow 0.18s;
-            height: 100%; /* fill grid row so cards are uniform */
+            gap: 1rem;
+            transition: all 0.3s;
         }
         
         .product-card:hover {
-            transform: translateY(-5px);
-            border-color: rgba(56, 189, 248, 0.4);
-            box-shadow: 0 22px 50px rgba(0, 0, 0, 0.35);
+            border-color: var(--primary);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.3);
+            transform: translate(-2px, -2px);
         }
 
         .product-card h3 {
-            font-size: 1.02rem; /* slightly smaller title */
-            color: var(--text);
+            font-size: 1.3rem;
+            color: var(--primary);
             text-transform: uppercase;
-            letter-spacing: 0.04em;
-            text-align: center;
-            margin: 0;
-            line-height: 1.2;
+            letter-spacing: 0.05em;
+            text-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
         }
 
         .label {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 0.28rem 0.6rem; /* smaller pill */
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.06);
-            color: #dbeafe;
-            font-size: 0.78rem;
+            padding: 0.4rem 0.75rem;
+            border-radius: 0;
+            background: rgba(0, 255, 255, 0.15);
+            color: var(--primary);
+            font-size: 0.8rem;
             font-weight: 700;
             width: fit-content;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            border: 2px solid var(--primary);
             text-transform: uppercase;
-            letter-spacing: 0.04em;
-            box-shadow: 0 0 6px rgba(255, 255, 255, 0.08);
+            letter-spacing: 0.05em;
+            box-shadow: 0 0 8px rgba(0, 255, 255, 0.2);
         }
 
         .product-desc {
@@ -429,18 +337,18 @@
         .product-image,
         .product-image-link {
             width: 100%;
-            height: 140px; /* shrink image height to reduce card height */
-            border-radius: 0.95rem;
-            background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+            height: 180px;
+            border-radius: 0;
+            background: var(--surface-alt);
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--text);
-            font-size: 2.2rem;
-            margin-bottom: 0.75rem;
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 2.8rem;
+            margin-bottom: 1rem;
+            border: 2px solid var(--border);
             cursor: pointer;
-            transition: transform 0.18s, border-color 0.18s, box-shadow 0.18s;
+            transition: all 0.2s;
             overflow: hidden;
             text-decoration: none;
         }
@@ -461,21 +369,22 @@
         }
 
         .trait-box {
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 0.85rem;
-            padding: 0.35rem 0.45rem; /* compact trait boxes */
+            background: var(--surface-alt);
+            border: 2px solid var(--border);
+            border-radius: 0;
+            padding: 0.5rem 0.6rem;
             display: flex;
             flex-direction: column;
-            gap: 0.18rem;
+            gap: 0.25rem;
         }
 
         .trait-box strong {
-            color: #f8fafc;
+            color: var(--primary);
             font-size: 0.85rem;
             text-transform: uppercase;
-            font-weight: 800;
-            letter-spacing: 0.05em;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+            text-shadow: 0 0 5px var(--primary);
         }
 
         .trait-box span {
@@ -497,46 +406,44 @@
             display: flex;
             gap: 0.75rem;
             flex-wrap: wrap;
-            margin-top: auto; /* push actions to bottom */
         }
 
         .action-btn,
         .buy-btn {
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 999px;
-            padding: 0.6rem 0.9rem; /* smaller buttons */
+            border: 2px solid var(--border);
+            border-radius: 0;
+            padding: 0.85rem 1rem;
             cursor: pointer;
-            font-weight: 700;
+            font-weight: 600;
             text-transform: uppercase;
-            letter-spacing: 0.04em;
-            transition: all 0.18s;
-            font-size: 0.92rem;
+            letter-spacing: 0.05em;
+            transition: all 0.2s;
         }
 
         .action-btn {
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--surface-alt);
             color: var(--text);
             flex: 1 1 130px;
-            border-color: rgba(255, 255, 255, 0.12);
+            border-color: var(--border);
         }
 
         .action-btn:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(0, 255, 255, 0.3);
-            box-shadow: 0 0 10px rgba(0, 255, 255, 0.2);
+            background: rgba(0, 255, 255, 0.1);
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
         }
 
         .buy-btn {
-            background: #2af7ff;
-            color: #06121b;
+            background: var(--primary);
+            color: var(--bg);
             flex: 1 1 160px;
-            border-color: transparent;
-            box-shadow: 0 10px 24px rgba(42, 247, 255, 0.18);
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
         }
 
         .buy-btn:hover {
-            box-shadow: 0 18px 36px rgba(42, 247, 255, 0.26);
-            transform: translateY(-2px);
+            box-shadow: 0 0 20px var(--primary);
+            transform: translate(-2px, -2px);
         }
 
         .buy-btn:disabled {
@@ -593,220 +500,13 @@
         .cart-footer button { width: 100%; }
         .empty-cart { padding: 1rem; color: var(--muted); }
         @media (max-width: 520px) {
-            body {
-                padding-top: 52px;
-            }
-            nav {
-                padding: 0 0.75rem;
-                flex-direction: row;
-                gap: 0.5rem;
-                align-items: center;
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                min-height: 52px;
-                height: 52px;
-                display: flex;
-                align-items: center;
-                justify-content: flex-start; /* align items left; toggle will use margin-left:auto */
-                overflow: visible;
-                padding-right: 1.25rem; /* base space for toggle and scrollbar */
-                z-index: 220;
-            }
-            .nav-toggle {
-                order: 2;
-                margin-left: auto !important; /* push toggle to right edge */
-                display: inline-flex;
-                align-self: center !important;
-                height: 40px !important;
-                min-height: 40px !important;
-                padding: 0.2rem 0.5rem !important;
-                margin-top: 0 !important;
-                margin-bottom: 0 !important;
-                position: relative !important;
-                top: 0 !important;
-                transform: none !important;
-                z-index: 240;
-                margin-right: 0.6rem; /* keep a gap from the viewport edge */
-            }
-            /* Make toggle visually sit on the nav bar (not float) */
-            .nav-toggle {
-                background: rgba(10, 14, 29, 0.98) !important;
-                border: 1px solid rgba(255,255,255,0.06) !important;
-                box-shadow: none !important;
-                width: 38px !important;
-                height: 38px !important;
-                padding: 0 !important;
-                border-radius: 8px !important;
-            }
-
-            /* Ensure logo aligns vertically with toggle */
-            .logo {
-                display: inline-flex;
-                align-items: center;
-                height: 52px;
-                line-height: 1;
-            }
-            .nav-actions {
-                display: none;
-                flex-direction: column;
-                align-items: stretch;
-                gap: 0.4rem;
-                width: min(96vw, 280px);
-                justify-content: center;
-                margin: 0;
-                background: rgba(10, 14, 29, 1); /* fully opaque for readability */
-                padding: 0.85rem;
-                border-radius: 1rem;
-                border: 1px solid rgba(255, 255, 255, 0.12);
-                box-shadow: 0 22px 48px rgba(0, 0, 0, 0.36);
-                z-index: 210;
-                position: absolute;
-                right: 0.75rem;
-                left: auto;
-                top: calc(100% + 0.2rem);
-            }
-            .nav-actions .nav-icon {
-                width: 18px;
-                height: 18px;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                margin-right: 0.5rem;
-                font-size: 14px;
-                line-height: 1;
-                vertical-align: middle;
-            }
-            .nav-actions a {
-                min-width: 0;
-                text-align: left;
-                width: 100%;
-                padding: 0.85rem 1rem;
-                font-size: 0.92rem;
-                border-radius: 0.85rem;
-                background: rgba(255, 255, 255, 0.08);
-                border: 1px solid rgba(255, 255, 255, 0.13);
-                color: #e0f7ff;
-                transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
-            }
-            .nav-actions a:hover {
-                transform: none;
-                background: rgba(255, 255, 255, 0.16);
-                box-shadow: none;
-            }
-            nav.open .nav-actions {
-                display: flex;
-            }
-            /* Use flex layout so toggle sits inline and vertically centered */
-            nav {
-                position: fixed;
-                padding-left: 0.75rem;
-                padding-right: 1.25rem; /* keep breathing room for toggle */
-                align-items: center;
-                display: flex;
-                justify-content: space-between; /* force left logo and right toggle */
-            }
-            .nav-toggle {
-                position: static !important;
-                right: auto !important;
-                top: auto !important;
-                transform: none !important;
-                order: 2;
-                margin-left: auto !important; /* ensure it stays right-aligned */
-                display: inline-flex !important;
-                align-self: center !important;
-                z-index: 260 !important;
-            }
             .cart-panel { width: 100%; }
             .cart-item { width: 100%; }
-            .hero {
-                padding: 3rem 1rem;
-            }
-            .hero h1 {
-                font-size: 2rem;
-            }
-            .hero p {
-                font-size: 0.95rem;
-            }
-            .toolbar {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .search-input {
-                flex: 1 1 100%;
-                width: 100%;
-                max-width: 100%;
-                min-width: 0;
-            }
-            .filter-group {
-                justify-content: flex-start;
-                width: 100%;
-            }
-            .filter-btn {
-                padding: 0.6rem 0.85rem;
-                font-size: 0.85rem;
-            }
-            .sort-select {
-                width: 100%;
-            }
-            .product-grid {
-                gap: 0.75rem;
-                max-width: 360px;
-                margin: 0 auto;
-                width: 100%;
-            }
-            .product-card {
-                padding: 0.85rem;
-                max-width: 360px;
-                margin: 0 auto;
-                width: 100%;
-            }
-            .product-title {
-                font-size: 1rem;
-            }
-            .price {
-                font-size: 1.05rem;
-            }
-            .product-image,
-            .product-image-link {
-                height: 140px;
-            }
-            .trait-box {
-                padding: 0.55rem 0.65rem;
-            }
-            .buy-btn {
-                padding: 0.7rem 0.9rem;
-            }
-            .traits li {
-                font-size: 0.75rem;
-                padding: 0.2rem 0.45rem;
-            }
         }
 
         @media (max-width: 640px) {
-            nav { flex-direction: row; gap: 0.5rem; align-items: center; justify-content: space-between; }
+            nav { flex-direction: column; gap: 1rem; align-items: stretch; }
             .toolbar { flex-direction: column; align-items: stretch; }
-        }
-        /* Featured grid stacking on small screens */
-        @media (max-width: 520px) {
-            .featured-grid {
-                display: grid;
-                grid-template-columns: 1fr;
-                gap: 0.75rem;
-            }
-            .featured-card {
-                padding: 0.85rem;
-                border-radius: 0.75rem;
-            }
-            nav {
-                padding-right: 2.4rem !important; /* give extra breathing room on small screens */
-                justify-content: flex-start; /* align left and push toggle with auto margin */
-            }
-            .nav-toggle {
-                margin-right: 1rem !important;
-                margin-left: auto !important;
-            }
         }
     </style>
     <link rel="stylesheet" href="cart-fab.css">
@@ -819,17 +519,10 @@
 <body>
     <nav>
         <a href="index.html" class="logo">Azey Dev Shop</a>
-        <button class="nav-toggle" type="button" aria-label="Toggle navigation">
-            <span></span>
-            <span></span>
-            <span></span>
-        </button>
         <div class="nav-actions">
             <a href="index.html" class="cta-button">Home</a>
             <a href="deviations.html" class="cta-button">Browse Deviations</a>
             <a href="custom-orders.html" class="cta-button">Custom Orders</a>
-            <a href="https://www.facebook.com/profile.php?id=100093463928728" target="_blank" rel="noopener noreferrer" class="cta-button">Facebook</a>
-            <a href="https://discord.com/users/586754456528355328" target="_blank" rel="noopener noreferrer" class="cta-button">Discord</a>
             <a href="inventory-manager.html" title="Inventory Manager">
                 <span class="nav-icon">⚙️</span>
                 Admin
@@ -886,7 +579,7 @@
                 <ol style="margin:0;padding-left:1.25rem;">
                     <li>Add items to your cart</li>
                     <li>Click <strong>"Copy Receipt"</strong> to copy your order</li>
-                    <li>Send it to <a href="https://www.facebook.com/profile.php?id=100093463928728" target="_blank" rel="noopener noreferrer" style="color: #ffd700;"><strong>Iain Gomez</strong></a> via chat on Facebook or <a href="https://discord.com/users/586754456528355328" target="_blank" rel="noopener noreferrer" style="color: #ffd700;"><strong><em>_azeaze</em></strong></a> on Discord</li>
+                    <li>Send it to <strong>Iain Gomez</strong> via chat on Facebook or <strong><em>_azeaze</em></strong> on Discord</li>
                     <li>Wait for confirmation</li>
                 </ol>
             </div>
@@ -920,11 +613,9 @@
             lastScrollTop = currentScroll <= 0 ? 0 : currentScroll;
         });
 
-        const categories = ['All', 'Starfall', 'Variant', 'Lunar', 'Aberrant', 'Chaos', 'Normal'];
+        const categories = ['All', 'Starfall', 'Variant', 'Lunar', 'Chaos', 'Normal'];
 
         const cartCountEl = document.getElementById('cart-count');
-        const navToggle = document.querySelector('.nav-toggle');
-        const navLinks = document.querySelectorAll('.nav-actions a');
         const cartTrigger = document.getElementById('cart-fab');
         const cartOverlay = document.getElementById('cart-overlay');
         const cartPanel = document.getElementById('cart-panel');
@@ -987,16 +678,27 @@
                 return categoryMatch && searchMatch;
             });
 
-            // Apply sorting
-            if (currentSortMode === 'price-low') {
-                filtered = filtered.sort((a, b) => a.price - b.price);
-            } else if (currentSortMode === 'price-high') {
-                filtered = filtered.sort((a, b) => b.price - a.price);
-            } else if (currentSortMode === 'name') {
-                filtered = filtered.sort((a, b) => a.name.localeCompare(b.name));
-            } else if (currentSortMode === 'stock') {
-                filtered = filtered.sort((a, b) => b.stock - a.stock);
-            }
+            // Apply sorting, with out-of-stock items pushed to the bottom
+            filtered = filtered.sort((a, b) => {
+                const aInStock = Number(a.stock) > 0;
+                const bInStock = Number(b.stock) > 0;
+
+                if (aInStock !== bInStock) {
+                    return aInStock ? -1 : 1;
+                }
+
+                if (currentSortMode === 'price-low') {
+                    return a.price - b.price;
+                } else if (currentSortMode === 'price-high') {
+                    return b.price - a.price;
+                } else if (currentSortMode === 'name') {
+                    return a.name.localeCompare(b.name);
+                } else if (currentSortMode === 'stock') {
+                    return b.stock - a.stock;
+                }
+
+                return 0;
+            });
 
             productsEl.innerHTML = '';
             if (!filtered.length) {
@@ -1072,22 +774,19 @@
         function addToCart(productId) {
             const result = DeviationCart.addToCart(productId, cart);
             if (!result.ok) {
-                window.DeviationToast.show(result.message, 'error');
+                alert(result.message);
                 return;
             }
             saveCart();
             renderCart();
             cartCountEl.style.transform = 'scale(1.2)';
             setTimeout(() => cartCountEl.style.transform = 'scale(1)', 150);
-
-            const product = DeviationCart.getProduct(productId);
-            window.DeviationToast.show(`Added ${product?.name || 'item'} to cart`, 'success');
         }
 
         function changeQty(index, delta) {
             const result = DeviationCart.changeQty(index, delta, cart);
             if (!result.ok) {
-                window.DeviationToast.show(result.message, 'error');
+                alert(result.message);
                 return;
             }
             saveCart();
@@ -1095,10 +794,6 @@
         }
 
         function removeFromCart(index) {
-            const item = cart[index];
-            if (item) {
-                window.DeviationToast.show(`Removed ${item.name} from cart`, 'info');
-            }
             cart.splice(index, 1);
             saveCart();
             renderCart();
@@ -1165,14 +860,6 @@
         cartTrigger.addEventListener('click', openCart);
         cartOverlay.addEventListener('click', closeCart);
         closeCartBtn.addEventListener('click', closeCart);
-        navToggle?.addEventListener('click', () => {
-            nav?.classList.toggle('open');
-        });
-        navLinks.forEach(link => {
-            link.addEventListener('click', () => {
-                nav?.classList.remove('open');
-            });
-        });
 
         sortSelect.addEventListener('change', (e) => {
             currentSortMode = e.target.value;
@@ -1216,14 +903,6 @@
                 a.click();
                 a.remove();
                 URL.revokeObjectURL(url);
-
-                // Record sales stats when user downloads receipt
-                if (cart.length) {
-                    const total = cart.reduce((s, it) => s + it.price * it.qty, 0);
-                    const itemCount = cart.reduce((s, it) => s + it.qty, 0);
-                    window.DeviationCart.recordSaleStats(total, itemCount);
-                    window.DeviationToast.show(`Order processed! Total: ${formatPrice(total)}`, 'success');
-                }
             } catch (error) {
                 alert('Failed to download receipt: ' + error.message);
             }
@@ -1234,15 +913,7 @@
                 if (!navigator.clipboard) throw new Error('Clipboard API not available');
                 const receiptText = buildReceiptText();
                 await navigator.clipboard.writeText(receiptText);
-                // Record sales stats when user copies receipt
-                if (cart.length) {
-                    const total = cart.reduce((s, it) => s + it.price * it.qty, 0);
-                    const itemCount = cart.reduce((s, it) => s + it.qty, 0);
-                    window.DeviationCart.recordSaleStats(total, itemCount);
-                    window.DeviationToast.show(`Order processed! Total: ${formatPrice(total)}`, 'success');
-                } else {
-                    window.DeviationToast.show('Receipt copied to clipboard', 'success');
-                }
+                alert('Receipt copied to clipboard');
             } catch (error) {
                 alert('Copy failed: ' + error.message + '\nPlease use Download Receipt instead.');
             }
@@ -1253,6 +924,12 @@
         document.getElementById('clear-cart').addEventListener('click', () => {
             if (!cart.length) return;
             if (!confirm('Clear the cart?')) return;
+            
+            // Record sales stats
+            const total = cart.reduce((s, it) => s + it.price * it.qty, 0);
+            const itemCount = cart.reduce((s, it) => s + it.qty, 0);
+            window.DeviationCart.recordSaleStats(total, itemCount);
+            
             cart = [];
             saveCart();
             renderCart();
