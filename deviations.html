@@ -213,13 +213,17 @@
         .search-input {
             flex: 1 1 220px;
             min-width: 180px;
-            padding: 0.7rem 0.9rem;
+            padding: 0.5rem 0.75rem;
             border: 2px solid var(--border);
             border-radius: 0;
             background: var(--surface-alt);
             color: var(--text);
             transition: all 0.2s;
             font-size: 0.95rem;
+            line-height: 1.2;
+            height: 2.1rem;
+            max-height: 2.1rem;
+            box-sizing: border-box;
         }
         
         .search-input:focus {
@@ -602,12 +606,14 @@
             }
 
             .search-input {
-                width: min(100%, 320px);
+                width: min(100%, 240px);
                 max-width: 100%;
                 min-width: 0;
-                padding: 0.55rem 0.75rem;
-                font-size: 0.9rem;
-                height: 2.2rem;
+                padding: 0.45rem 0.7rem;
+                font-size: 0.95rem;
+                height: 2rem;
+                min-height: 2rem;
+                line-height: 1.2;
                 margin: 0 auto;
             }
 
