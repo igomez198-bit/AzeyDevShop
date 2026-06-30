@@ -93,6 +93,24 @@
             gap: 0.85rem;
         }
 
+        .nav-toggle {
+            display: none;
+            background: none;
+            border: 0;
+            padding: 0.25rem;
+            cursor: pointer;
+            color: var(--text);
+        }
+
+        .nav-toggle .bar {
+            display: block;
+            width: 24px;
+            height: 2px;
+            background: var(--primary);
+            margin: 4px 0;
+            border-radius: 999px;
+        }
+
         .nav-actions a {
             color: var(--text);
             text-decoration: none;
@@ -504,8 +522,38 @@
             .cart-item { width: 100%; }
         }
 
-        @media (max-width: 640px) {
-            nav { flex-direction: column; gap: 1rem; align-items: stretch; }
+        @media (max-width: 780px) {
+            nav {
+                flex-wrap: wrap;
+                gap: 0.75rem;
+                padding: 0.9rem 1rem;
+            }
+
+            .nav-toggle {
+                display: inline-flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .nav-actions {
+                display: none;
+                width: 100%;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.75rem;
+                padding-top: 0.5rem;
+                border-top: 1px solid rgba(148, 163, 184, 0.16);
+            }
+
+            .nav-actions.open {
+                display: flex;
+            }
+
+            .nav-actions a {
+                justify-content: center;
+            }
+
             .toolbar { flex-direction: column; align-items: stretch; }
         }
     </style>
@@ -519,7 +567,12 @@
 <body>
     <nav>
         <a href="index.html" class="logo">Azey Dev Shop</a>
-        <div class="nav-actions">
+        <button class="nav-toggle" id="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="site-nav">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </button>
+        <div class="nav-actions" id="site-nav">
             <a href="index.html" class="cta-button">Home</a>
             <a href="deviations.html" class="cta-button">Browse Deviations</a>
             <a href="custom-orders.html" class="cta-button">Custom Orders</a>
@@ -626,8 +679,31 @@
         const productsEl = document.getElementById('products');
         const closeCartBtn = document.getElementById('close-cart');
         const sortSelect = document.getElementById('sort-select');
+        const navToggle = document.getElementById('nav-toggle');
+        const siteNav = document.getElementById('site-nav');
 
         let currentSortMode = 'featured';
+
+        if (navToggle && siteNav) {
+            navToggle.addEventListener('click', () => {
+                const isOpen = siteNav.classList.toggle('open');
+                navToggle.setAttribute('aria-expanded', String(isOpen));
+            });
+
+            siteNav.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    siteNav.classList.remove('open');
+                    navToggle.setAttribute('aria-expanded', 'false');
+                });
+            });
+
+            window.addEventListener('resize', () => {
+                if (window.innerWidth > 780) {
+                    siteNav.classList.remove('open');
+                    navToggle.setAttribute('aria-expanded', 'false');
+                }
+            });
+        }
 
         function formatPrice(value) {
             return DeviationCart.formatPrice(value);
