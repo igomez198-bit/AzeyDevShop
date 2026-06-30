@@ -324,6 +324,40 @@
             text-transform: uppercase;
             letter-spacing: 0.05em;
             text-shadow: 0 0 8px rgba(0, 255, 255, 0.4);
+            margin: 0;
+            display: inline-block;
+            white-space: nowrap;
+        }
+
+        .product-title-wrapper {
+            overflow: hidden;
+            min-height: 3rem;
+            padding-bottom: 0.5rem;
+            width: 100%;
+            position: relative;
+        }
+
+        .product-title-wrapper h3 {
+            display: inline-block;
+            will-change: transform;
+            transform: translateX(0);
+            white-space: nowrap;
+        }
+
+        .product-title-wrapper.scrolling h3 {
+            animation: marquee var(--marquee-duration, 8s) linear infinite;
+        }
+
+        @keyframes marquee {
+            0% {
+                transform: translateX(0);
+            }
+            50% {
+                transform: translateX(calc(var(--marquee-distance, 0px) * -1));
+            }
+            100% {
+                transform: translateX(0);
+            }
         }
 
         .label {
@@ -841,7 +875,7 @@
                 card.innerHTML = `
                     ${DeviationCart.renderProductImage(item, 'product-image')}
                     <div class="label">${item.type}</div>
-                    <h3>${item.name}</h3>
+                    <div class="product-title-wrapper"><h3>${item.name}</h3></div>
                     <span class="${stockPillClass(item)}">${stockPillText(item)}</span>
                     <div class="product-meta">
                         <div class="trait-box">
@@ -874,6 +908,24 @@
                     </div>
                 `;
                 productsEl.appendChild(card);
+            });
+
+            // Enable marquee scrolling for long titles
+            const titleWrappers = productsEl.querySelectorAll('.product-title-wrapper');
+            titleWrappers.forEach(wrapper => {
+                const title = wrapper.querySelector('h3');
+                if (!title) return;
+                const overflowAmount = title.scrollWidth - wrapper.clientWidth;
+                if (overflowAmount > 2) {
+                    const duration = Math.max(5, Math.min(18, overflowAmount / 12));
+                    wrapper.classList.add('scrolling');
+                    wrapper.style.setProperty('--marquee-distance', `${overflowAmount}px`);
+                    wrapper.style.setProperty('--marquee-duration', `${duration}s`);
+                } else {
+                    wrapper.classList.remove('scrolling');
+                    wrapper.style.removeProperty('--marquee-distance');
+                    wrapper.style.removeProperty('--marquee-duration');
+                }
             });
         }
 
