@@ -1,4 +1,5 @@
-[
+// Traits Data - Complete List
+const traitsData = [
   {"name": "Upper Hand", "description": "When Deviant Power drops to 0, automatically consume Mood to recover Deviant Power.", "category": "Global", "type": "positive", "source": "Global", "slot": 1},
   {"name": "Stable Energy", "description": "Max Deviant Power +30%", "category": "Global", "type": "positive", "source": "Global", "slot": 1},
   {"name": "Stable Vitality", "description": "Max Mood +30%", "category": "Global", "type": "positive", "source": "Global", "slot": 1},
@@ -30,16 +31,16 @@
   {"name": "Wellbeing", "description": "Syncing with this Deviation grants Max Stamina +10", "category": "Combat", "type": "positive", "source": "Combat Deviation", "slot": 2},
   {"name": "Sedantary", "description": "Syncing with it grants Max Load -8 when exploring Settlements", "category": "Combat", "type": "negative", "source": "Combat Deviation", "slot": 2},
   {"name": "Lighten Your Mind", "description": "Lower Load grants higher DMG Reduction for head, up to +15%", "category": "Combat", "type": "positive", "source": "Combat Deviation", "slot": 4},
-  {"name": "Elemental DMG Reduction", "description": "Elemental DMG Reduction +12% / +17% / +22% (Levels 1-3)", "category": "Global", "type": "positive", "source": "Combat Deviation", "slot": 4},
-  {"name": "Physical DMG Reduction", "description": "Physical DMG Reduction +12% / +17% / +22% (Levels 1-3)", "category": "Global", "type": "positive", "source": "Combat Deviation", "slot": 4},
-  {"name": "Elemental DMG Bonus", "description": "Elemental DMG Bonus +15% / +21% / +27% (Levels 1-3)", "category": "Global", "type": "positive", "source": "Combat Deviation", "slot": 4},
-  {"name": "Physical DMG Bonus", "description": "Physical DMG Bonus +15% / +21% / +27% (Levels 1-3)", "category": "Global", "type": "positive", "source": "Combat Deviation", "slot": 4},
-  {"name": "Attack", "description": "Attack +28 / +38 / +50 (Levels 1-3)", "category": "Global", "type": "positive", "source": "Combat Deviation", "slot": 4},
-  {"name": "Attack Percentage", "description": "Attack +10% / +14% / +18% (Levels 1-3)", "category": "Global", "type": "positive", "source": "Combat Deviation", "slot": 4},
-  {"name": "HP", "description": "HP +2350 / +3300 / +4250 (Levels 1-3)", "category": "Global", "type": "positive", "source": "Combat Deviation", "slot": 4},
-  {"name": "HP Percentage", "description": "HP +10% / +14% / +18% (Levels 1-3)", "category": "Global", "type": "positive", "source": "Combat Deviation", "slot": 4},
-  {"name": "Crit Damage", "description": "Crit Damage +36% / +50% / +64% (Levels 1-3)", "category": "Global", "type": "positive", "source": "Combat Deviation", "slot": 4},
-  {"name": "Crit Rate", "description": "Crit Rate +18% / +25% / +32% (Levels 1-3)", "category": "Global", "type": "positive", "source": "Combat Deviation", "slot": 4},
+  {"name": "Elemental DMG Reduction", "description": "Elemental DMG Reduction +12% / +17% / +22% (Levels 1-3)", "category": "all", "type": "positive", "source": "Combat Deviation", "slot": 4},
+  {"name": "Physical DMG Reduction", "description": "Physical DMG Reduction +12% / +17% / +22% (Levels 1-3)", "category": "all", "type": "positive", "source": "Combat Deviation", "slot": 4},
+  {"name": "Elemental DMG Bonus", "description": "Elemental DMG Bonus +15% / +21% / +27% (Levels 1-3)", "category": "all", "type": "positive", "source": "Combat Deviation", "slot": 4},
+  {"name": "Physical DMG Bonus", "description": "Physical DMG Bonus +15% / +21% / +27% (Levels 1-3)", "category": "all", "type": "positive", "source": "Combat Deviation", "slot": 4},
+  {"name": "Attack", "description": "Attack +28 / +38 / +50 (Levels 1-3)", "category": "all", "type": "positive", "source": "Combat Deviation", "slot": 4},
+  {"name": "Attack Percentage", "description": "Attack +10% / +14% / +18% (Levels 1-3)", "category": "all", "type": "positive", "source": "Combat Deviation", "slot": 4},
+  {"name": "HP", "description": "HP +2350 / +3300 / +4250 (Levels 1-3)", "category": "all", "type": "positive", "source": "Combat Deviation", "slot": 4},
+  {"name": "HP Percentage", "description": "HP +10% / +14% / +18% (Levels 1-3)", "category": "all", "type": "positive", "source": "Combat Deviation", "slot": 4},
+  {"name": "Crit Damage", "description": "Crit Damage +36% / +50% / +64% (Levels 1-3)", "category": "all", "type": "positive", "source": "Combat Deviation", "slot": 4},
+  {"name": "Crit Rate", "description": "Crit Rate +18% / +25% / +32% (Levels 1-3)", "category": "all", "type": "positive", "source": "Combat Deviation", "slot": 4},
 
   {"name": "Anti-Burnout", "description": "When dormant (regaining Power), 20% chance others receive Power +5", "category": "Territory", "type": "positive", "source": "Territory Deviation", "slot": 2},
   {"name": "Dream Wild", "description": "When dormant (regaining Power), 10% chance others receive Power +10", "category": "Territory", "type": "positive", "source": "Territory Deviation", "slot": 2},
@@ -119,9 +120,9 @@
   {"name": "Milk Sugar", "description": "Gains Max Mood 35%", "category": "Variation", "type": "variation", "source": "Festering Gel", "slot": 1},
   {"name": "Marine Star", "description": "Each reload gives either 5% Weapon DMG bonus or 5% Status DMG at random.", "category": "Variation", "type": "variation", "source": "Festering Gel", "slot": 1},
   {"name": "Spring Rose", "description": "When synced +20% more healing during the day +10% at night", "category": "Variation", "type": "variation", "source": "Festering Gel", "slot": 1},
-  {"name": "Ancient Scroll", "description": "Gains Max Energy 40%", "category": "Variation", "type": "variation", "source": "Butterfly's Emissary", "slot": 1},
-  {"name": "Glistening Blue", "description": "When synced, hitting a Weakspot increases Deviation Power by 1 (CD: 3s).", "category": "Variation", "type": "variation", "source": "Butterfly's Emissary", "slot": 2},
-  {"name": "Starry Night", "description": "When synced, deal +6% more damage at night +3% during day", "category": "Variation", "type": "variation", "source": "Butterfly's Emissary", "slot": 2},
+  {"name": "Ancient Scroll", "description": "Gains Max Energy 40%", "category": "Variation", "type": "variation", "source": "Butterfly Emissary", "slot": 1},
+  {"name": "Glistening Blue", "description": "When synced, hitting a Weakspot increases Deviation Power by 1 (CD: 3s).", "category": "Variation", "type": "variation", "source": "Butterfly Emissary", "slot": 2},
+  {"name": "Starry Night", "description": "When synced, deal +6% more damage at night +3% during day", "category": "Variation", "type": "variation", "source": "Butterfly Emissary", "slot": 2},
   {"name": "Aquarius", "description": "Gains Mood Recovery Speed +30%", "category": "Variation", "type": "variation", "source": "Fetch-A-Lot Bunny", "slot": 1},
   {"name": "Gluttonous Bunny", "description": "Gains Energy Recovery Speed +15%", "category": "Variation", "type": "variation", "source": "Fetch-A-Lot Bunny", "slot": 1},
   {"name": "Dark Rebel", "description": "When exploring, has a chance to bring back Acid.", "category": "Variation", "type": "variation", "source": "Fetch-A-Lot Bunny", "slot": 2},
@@ -181,6 +182,7 @@
   {"name": "Malevolent Sun", "description": "Mood Recovery Speed +20%", "category": "Variation", "type": "variation", "source": "Invincible Sun", "slot": 1},
   {"name": "Christmas Spirit", "description": "Max Energy +10%, Energy recovery speed +5%", "category": "Variation", "type": "variation", "source": "Dr. Teddy / Chefosaurus Rex", "slot": 1},
   
+
   {"name": "Lunar Oracle", "description": "Weapon DMG +5% (+7.5% when sanity <30%)", "category": "Variation", "type": "variation", "source": "Lonewolf's Whisper", "slot": 2},
   {"name": "Lunar Oracle", "description": "Gliding speed modifier (Horizontal +10%, Downward -20%)", "category": "Variation", "type": "variation", "source": "By-The-Wind", "slot": 2},
   {"name": "Lunar Oracle", "description": "Restores 1 Power/8s (1.5 when sanity <30%)", "category": "Variation", "type": "variation", "source": "Festering Gel", "slot": 2},
@@ -206,4 +208,4 @@
   {"name": "Aberrant Progeny", "description": "Player damage taken is reduced by 15%, with 50% more effect while in Pollution Zones.", "category": "Variation", "type": "variation", "source": "Dr. Teddy", "slot": 1},
   {"name": "Aberrant Progeny", "description": "Has a 30% chance of yielding +1 resource when in a Pollution Zone.", "category": "Variation", "type": "variation", "source": "Upper World Spawn", "slot": 1}
 
-]
+];

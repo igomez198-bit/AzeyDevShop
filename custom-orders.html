@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Azey Dev Shop | Custom Orders</title>
     <link rel="stylesheet" href="features.css">
-    <script src="data-traits.js"></script>
+    <script src="traits.js"></script>
     <script src="data-deviations.js"></script>
     <style>
         :root {
@@ -249,6 +249,22 @@
 
         .trait-input-group select {
             flex: 1;
+        }
+
+        .trait-field-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            flex: 1;
+        }
+
+        .trait-description {
+            font-size: 0.8rem;
+            color: var(--muted);
+            line-height: 1.35;
+            padding: 0.35rem 0.5rem;
+            border-left: 2px solid rgba(0, 255, 255, 0.25);
+            min-height: 1.1rem;
         }
 
         .trait-input-group input[type="number"] {
@@ -680,13 +696,184 @@
         let selectedTraits = ['', '', '', '', ''];
         let orderItems = [];
 
+        function formatTraitLabel(trait, selectedDeviation = '') {
+            if (!trait || typeof trait !== 'object') return '';
+            const sourcePart = getTraitSourceLabel(trait, selectedDeviation);
+            return `${trait.name}${sourcePart} (${trait.category} | ${trait.type})`;
+        }
+
+        function getTraitDropdownLabel(trait, selectedDeviation = '') {
+            if (!trait || typeof trait !== 'object') return '';
+            const sourcePart = getTraitSourceLabel(trait, selectedDeviation);
+            return `${trait.name}${sourcePart}`;
+        }
+
+        function getTraitSourceLabel(trait, selectedDeviation = '') {
+            if (!trait || typeof trait !== 'object') return '';
+            const source = String(trait.source || '').trim();
+            if (!source || !selectedDeviation) return '';
+
+            const normalizedSource = source.toLowerCase();
+            const shouldShowSource = sourceMatchesDeviation(trait, selectedDeviation)
+                || normalizedSource === 'global'
+                || normalizedSource === 'various'
+                || normalizedSource === 'chaos';
+
+            return shouldShowSource ? ` — ${source}` : '';
+        }
+
+        function isChaosDeviation(name) {
+            return typeof name === 'string' && /^Chaos\b/i.test(String(name).trim());
+        }
+
+        function getBaseDeviationName(name) {
+            const value = String(name || '').trim();
+            return isChaosDeviation(value) ? value.replace(/^Chaos\s+/i, '').trim() : value;
+        }
+
+        function getDeviationType(name) {
+            const value = String(name || '').trim();
+            if (!value) return '';
+
+            const match = deviationsData.find(dev => normalizeDeviationName(dev.name) === normalizeDeviationName(value));
+            return match && match.type ? String(match.type).trim() : '';
+        }
+
+        function createChaosTrait(selectedDeviation) {
+            return {
+                name: 'Chaos',
+                description: 'Chaos trait selected for Chaos deviations.',
+                category: 'Special',
+                type: 'variation',
+                source: selectedDeviation || 'Chaos',
+                slot: 5
+            };
+        }
+
+        function isSameTrait(a, b) {
+            if (!a || !b || typeof a !== 'object' || typeof b !== 'object') return false;
+            return a.name === b.name && a.source === b.source && a.slot === b.slot && a.category === b.category && a.type === b.type;
+        }
+
         // Initialize when page loads
         document.addEventListener('DOMContentLoaded', function() {
             console.log('✓ Traits loaded:', traitsData.length, 'items');
             console.log('✓ Deviations loaded:', deviationsData.length, 'items');
+
+            // Normalize trait sources to match canonical deviation names
+            normalizeTraitSources();
+
             populateDeviationSelect();
             createTraitSelectors();
         });
+
+        function normalizeString(value) {
+            return String(value || '')
+                .toLowerCase()
+                .replace(/[’'‘]/g, '')
+                .replace(/[^a-z0-9\s]/g, ' ')
+                .trim()
+                .replace(/\s+/g, ' ')
+                .replace(/\b(the|a|an)\b/g, '')
+                .trim();
+        }
+
+        function normalizeDeviationName(value) {
+            const raw = String(value || '').trim();
+            if (!raw) return '';
+            return normalizeString(raw.replace(/\s*\([^)]*\)\s*$/, ''));
+        }
+
+        function splitSourceParts(sourceValue) {
+            return String(sourceValue || '')
+                .split(/\s*[\/,&]\s*/)
+                .map(part => String(part || '').trim())
+                .filter(Boolean);
+        }
+
+        function sourceMatchesDeviation(trait, selectedDeviation) {
+            if (!trait || typeof trait !== 'object') return false;
+
+            const deviationName = getBaseDeviationName(selectedDeviation);
+            const normalizedDeviation = normalizeDeviationName(deviationName);
+            if (!normalizedDeviation) return false;
+
+            const deviationType = normalizeString(getDeviationType(selectedDeviation));
+            const explicitSources = Array.isArray(trait.sourceDeviations)
+                ? trait.sourceDeviations.filter(Boolean)
+                : [];
+            const sourcesToCheck = explicitSources.length > 0
+                ? explicitSources
+                : [trait.source];
+
+            return sourcesToCheck.some(sourceValue => {
+                const normalizedSource = normalizeString(sourceValue);
+                if (!normalizedSource) return false;
+
+                const genericCategorySource = deviationType ? `${deviationType} deviation` : '';
+                const genericCategorySourceNormalized = normalizeString(genericCategorySource);
+
+                return normalizedSource === normalizedDeviation
+                    || normalizedSource.includes(normalizedDeviation)
+                    || normalizedDeviation.includes(normalizedSource)
+                    || normalizedSource === genericCategorySourceNormalized
+                    || normalizedSource.includes(deviationType)
+                    || deviationType.includes(normalizedSource);
+            });
+        }
+
+        // Normalize trait.source values by matching against deviationsData names.
+        function normalizeTraitSources() {
+            if (!Array.isArray(traitsData) || !Array.isArray(deviationsData)) return;
+
+            function namesAreEquivalent(a, b) {
+                const normalizedA = normalizeString(a);
+                const normalizedB = normalizeString(b);
+                if (!normalizedA || !normalizedB) return false;
+                if (normalizedA === normalizedB) return true;
+                if (normalizedA.includes(normalizedB) || normalizedB.includes(normalizedA)) return true;
+
+                const wordsA = normalizedA.split(' ').filter(Boolean);
+                const wordsB = normalizedB.split(' ').filter(Boolean);
+                if (wordsA.length === 0 || wordsB.length === 0) return false;
+                if (wordsA.length === 1 || wordsB.length === 1) {
+                    return wordsA[0] === wordsB[0];
+                }
+
+                const common = wordsA.filter(word => wordsB.includes(word));
+                return common.length >= 2;
+            }
+
+            const canon = deviationsData.map(d => ({
+                name: d.name,
+                normalized: normalizeString(d.name)
+            }));
+
+            let fixed = 0;
+            traitsData.forEach(trait => {
+                if (!trait || !trait.source) return;
+                const rawSource = String(trait.source).trim();
+                const sourceLower = rawSource.toLowerCase();
+                if (sourceLower === 'global' || sourceLower.endsWith('deviation') || sourceLower === 'various') return;
+
+                const parts = splitSourceParts(rawSource);
+                const canonicalNames = [];
+                parts.forEach(part => {
+                    const normalizedPart = normalizeString(part);
+                    const match = canon.find(c => c.normalized === normalizedPart || namesAreEquivalent(normalizedPart, c.normalized));
+                    if (match && !canonicalNames.includes(match.name)) {
+                        canonicalNames.push(match.name);
+                    }
+                });
+                if (canonicalNames.length > 0) {
+                    trait.source = canonicalNames.join(' / ');
+                    fixed++;
+                }
+            });
+
+            console.log(`Normalized ${fixed} trait.source values against deviationsData`);
+        }
+
 
         function populateDeviationSelect() {
             const input = document.getElementById('deviationSelect');
@@ -734,6 +921,20 @@
             });
         }
 
+        function updateTraitDescription(slotIndex, trait) {
+            const descriptionEl = document.getElementById(`traitDescription${slotIndex}`);
+            if (!descriptionEl) return;
+
+            if (!trait || typeof trait !== 'object' || !trait.description) {
+                descriptionEl.textContent = '';
+                descriptionEl.style.display = 'none';
+                return;
+            }
+
+            descriptionEl.textContent = trait.description;
+            descriptionEl.style.display = 'block';
+        }
+
         function createTraitSelectors() {
             const container = document.getElementById('traitsContainer');
             container.innerHTML = '';
@@ -751,6 +952,9 @@
                 label.style.minWidth = '60px';
 
                 if (i < 4) {
+                    const fieldGroup = document.createElement('div');
+                    fieldGroup.className = 'trait-field-group';
+
                     const wrapper = document.createElement('div');
                     wrapper.className = 'trait-dropdown';
                     wrapper.style.flex = '1';
@@ -766,6 +970,7 @@
                     dropdown.className = 'dropdown-list';
 
                     input.addEventListener('input', (e) => {
+                        selectedTraits[i] = findTraitFromInput(i, e.target.value) || '';
                         renderTraitDropdown(i, e.target.value);
                     });
 
@@ -787,13 +992,21 @@
                     });
 
                     input.addEventListener('blur', () => {
+                        selectedTraits[i] = findTraitFromInput(i, input.value);
                         setTimeout(() => dropdown.classList.remove('visible'), 150);
                     });
 
+                    const description = document.createElement('div');
+                    description.id = `traitDescription${i}`;
+                    description.className = 'trait-description';
+                    description.style.display = 'none';
+
                     wrapper.appendChild(input);
                     wrapper.appendChild(dropdown);
+                    fieldGroup.appendChild(wrapper);
+                    fieldGroup.appendChild(description);
                     group.appendChild(label);
-                    group.appendChild(wrapper);
+                    group.appendChild(fieldGroup);
                 } else {
                     const display = document.createElement('div');
                     display.id = `trait${i}`;
@@ -819,63 +1032,113 @@
             updateTraitSelectors(document.getElementById('deviationSelect').value);
         }
 
-        function isChaosDeviation(name) {
-            return typeof name === 'string' && /(^Chaos|Chaos )/.test(name);
-        }
-
         function renderTraitDropdown(slotIndex, filterText = '') {
             const input = document.getElementById(`trait${slotIndex}`);
             const dropdown = document.getElementById(`traitDropdown${slotIndex}`);
             if (!input || !dropdown) return;
 
             const selectedDeviation = document.getElementById('deviationSelect').value;
+            const normDeviation = String(selectedDeviation).trim().toLowerCase();
             const availableTraits = getAvailableTraits(selectedDeviation, slotIndex);
             const normalizedFilter = filterText.toLowerCase();
             dropdown.innerHTML = '';
 
-            const matches = availableTraits.filter(name => name.toLowerCase().includes(normalizedFilter));
+            const matches = availableTraits.filter(trait => {
+                return trait.name.toLowerCase().includes(normalizedFilter)
+                    || String(trait.source || '').toLowerCase().includes(normalizedFilter)
+                    || trait.category.toLowerCase().includes(normalizedFilter)
+                    || trait.type.toLowerCase().includes(normalizedFilter);
+            });
+
             if (matches.length === 0) {
                 const item = document.createElement('div');
                 item.className = 'dropdown-item empty';
-                item.textContent = 'No traits found';
+                item.textContent = normDeviation ? 'No traits found' : 'Select a deviation first';
                 dropdown.appendChild(item);
                 return;
             }
 
-            matches.forEach(name => {
+            matches.forEach(trait => {
                 const item = document.createElement('div');
                 item.className = 'dropdown-item';
-                item.textContent = name;
+                item.textContent = trait.name;
                 item.addEventListener('mousedown', (e) => {
                     e.preventDefault();
-                    input.value = name;
-                    selectedTraits[slotIndex] = name;
+                    input.value = trait.name;
+                    selectedTraits[slotIndex] = trait;
+                    updateTraitDescription(slotIndex, trait);
                     dropdown.classList.remove('visible');
                 });
                 dropdown.appendChild(item);
             });
         }
 
+        function findTraitFromInput(slotIndex, inputValue) {
+            const selectedDeviation = document.getElementById('deviationSelect').value;
+            const availableTraits = getAvailableTraits(selectedDeviation, slotIndex);
+            const value = String(inputValue || '').trim().toLowerCase();
+            if (!value) return '';
+            return availableTraits.find(trait => String(trait.name || '').trim().toLowerCase() === value) || '';
+        }
+
         function getAvailableTraits(selectedDeviation, slotIndex) {
-            const slotCategories = {
-                0: ['Global', 'Variation'],
-                1: ['Territory', 'Crafting', 'Combat', 'Variation'],
-                2: ['Furniture', 'Animal'],
-                3: ['SCP']
-            };
+            const slotNumber = slotIndex + 1;
+            const normDeviation = String(selectedDeviation).trim().toLowerCase();
+            if (!normDeviation) {
+                return [];
+            }
 
-            const allTraits = traitsData
+            if (slotNumber === 5) {
+                if (isChaosDeviation(selectedDeviation)) {
+                    return [createChaosTrait(selectedDeviation)];
+                }
+                return [];
+            }
+
+            return traitsData
                 .filter(trait => {
-                    if (slotCategories[slotIndex]) {
-                        return slotCategories[slotIndex].includes(trait.category);
-                    }
-                    return true;
-                })
-                .map(trait => trait.name)
-                .filter((name, index, arr) => arr.indexOf(name) === index)
-                .sort();
+                    const sameSource = sourceMatchesDeviation(trait, selectedDeviation);
+                    const slotMatches = trait.slot === undefined || trait.slot === slotNumber || (slotNumber === 1 && trait.slot === 1);
+                    const deviationType = getDeviationType(selectedDeviation);
+                    const isVariationTrait = normalizeString(trait.type) === 'variation' || normalizeString(trait.category) === 'variation';
+                    const categoryMatches = slotNumber !== 2 || !deviationType
+                        ? true
+                        : normalizeString(trait.category) === normalizeString(deviationType) || (isVariationTrait && sameSource);
 
-            return allTraits;
+                    if (slotNumber === 1) {
+                        const hasExplicitDeviationFilter = Array.isArray(trait.sourceDeviations)
+                            && trait.sourceDeviations.some(Boolean);
+                        const sourceIsVarious = String(trait.source || '').trim().toLowerCase() === 'various';
+
+                        if (trait.category === 'Global') {
+                            return true;
+                        }
+
+                        if (hasExplicitDeviationFilter) {
+                            return sameSource && slotMatches;
+                        }
+
+                        return sourceIsVarious || (sameSource && slotMatches);
+                    }
+
+                    if (slotNumber === 2) {
+                        return categoryMatches && sameSource && slotMatches;
+                    }
+
+                    if (slotNumber === 3) {
+                        const isGenericSlot3Trait = ['animal', 'furniture'].includes(normalizeString(trait.category));
+                        return slotMatches && (sameSource || isGenericSlot3Trait);
+                    }
+
+                    if (slotNumber === 4) {
+                        const isSlot4Trait = trait.slot === 4;
+                        const matchesCategory = !deviationType || normalizeString(trait.category) === normalizeString(deviationType) || normalizeString(trait.category) === 'all';
+                        return isSlot4Trait && matchesCategory;
+                    }
+
+                    return sameSource && slotMatches;
+                })
+                .sort((a, b) => a.name.localeCompare(b.name));
         }
 
         function updateTraitSelectors(selectedDeviation) {
@@ -886,13 +1149,23 @@
                 const availableTraits = getAvailableTraits(selectedDeviation, i);
                 const currentValue = input.value.trim();
                 const dropdown = document.getElementById(`traitDropdown${i}`);
+                const selectedTrait = selectedTraits[i];
 
-                if (!availableTraits.includes(currentValue)) {
-                    input.value = '';
-                    selectedTraits[i] = '';
+                if (selectedTrait && isSameTrait(selectedTrait, availableTraits.find(t => isSameTrait(t, selectedTrait)))) {
+                    selectedTraits[i] = selectedTrait;
+                } else if (currentValue) {
+                    const match = availableTraits.find(trait => trait.name.trim().toLowerCase() === currentValue.toLowerCase());
+                    if (match) {
+                        selectedTraits[i] = match;
+                    } else {
+                        input.value = '';
+                        selectedTraits[i] = '';
+                    }
                 } else {
-                    selectedTraits[i] = currentValue;
+                    selectedTraits[i] = '';
                 }
+
+                updateTraitDescription(i, selectedTraits[i]);
 
                 if (dropdown && dropdown.classList.contains('visible')) {
                     renderTraitDropdown(i, input.value);
@@ -907,8 +1180,9 @@
             if (!display) return;
 
             if (isChaosDeviation(selectedDeviation)) {
-                display.textContent = 'Chaos';
-                selectedTraits[4] = 'Chaos';
+                const chaosTrait = createChaosTrait(selectedDeviation);
+                display.textContent = `${chaosTrait.name} — ${chaosTrait.source}`;
+                selectedTraits[4] = chaosTrait;
             } else {
                 display.textContent = 'No fifth trait available';
                 selectedTraits[4] = '';
@@ -958,7 +1232,7 @@
                 <div class="order-item">
                     <span>
                         <strong>${item.deviation}</strong>
-                        ${item.traits.length > 0 ? ` - ${item.traits.join(', ')}` : ' - (No traits)'}
+                        ${item.traits.length > 0 ? ` - ${item.traits.map(trait => formatTraitLabel(trait, item.deviation)).join(', ')}` : ' - (No traits)'}
                         ${item.notes ? `<br><small style="color: var(--muted);">Notes: ${item.notes}</small>` : ''}
                     </span>
                     <button onclick="removeOrderItem(${idx})">Remove</button>
@@ -989,7 +1263,7 @@
             itemsList.innerHTML = orderItems.map((item, idx) => {
                 const traitLines = item.traits.length > 0
                     ? item.traits.map((trait, traitIdx) => `
-                        <div style="color: var(--text); margin-left: 1rem; font-size: 0.95rem;">Trait ${traitIdx + 1}: ${trait}</div>`).join('')
+                        <div style="color: var(--text); margin-left: 1rem; font-size: 0.95rem;">Trait ${traitIdx + 1}: ${formatTraitLabel(trait, item.deviation)}</div>`).join('')
                     : `<div style="color: var(--muted); margin-left: 1rem; font-size: 0.95rem;">Trait 1: (No traits selected)</div>`;
 
                 const notesLine = item.notes
@@ -1012,12 +1286,14 @@
 
         function clearForm() {
             document.getElementById('orderNotes').value = '';
+            document.getElementById('deviationSelect').value = '';
             selectedTraits = ['', '', '', '', ''];
             
-            for (let i = 0; i < 5; i++) {
+            for (let i = 0; i < 4; i++) {
                 const select = document.getElementById(`trait${i}`);
                 if (select) select.value = '';
             }
+            updateTraitSelectors('');
         }
 
         function clearAllOrder() {
@@ -1046,12 +1322,12 @@
             receiptText += 'ORDER ITEMS:\n';
 
             orderItems.forEach((item, idx) => {
+                const traitList = item.traits.length > 0
+                    ? item.traits.map(trait => formatTraitLabel(trait, item.deviation)).join(', ')
+                    : 'None';
+
                 receiptText += `${idx + 1}. ${item.deviation}\n`;
-                if (item.traits.length > 0) {
-                    receiptText += `   Traits: ${item.traits.join(', ')}\n`;
-                } else {
-                    receiptText += '   Traits: None\n';
-                }
+                receiptText += `   Traits: ${traitList}\n`;
                 if (item.notes) {
                     receiptText += `   Notes: ${item.notes}\n`;
                 }
