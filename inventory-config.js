@@ -5,3 +5,7 @@ window.INVENTORY_AUTH = {
     SESSION_KEY: 'deviation_inventory_session_v1',
     SESSION_HOURS: 8
 };
+
+// Optional imgbb upload support.
+// Set this to your imgbb API key to upload images during inventory edits.
+window.IMG_BB_API_KEY = 'd4176ecf6918327822ecc18f4601d6e5'; // e.g. 'your_imgbb_api_key_here'
